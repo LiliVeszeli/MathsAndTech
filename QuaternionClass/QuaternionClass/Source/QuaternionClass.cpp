@@ -62,12 +62,12 @@ int main()
 	CVector3 v(1, 2, 3);
 	
 	
-	CVector3 rotVec = q1.Rotate(v);
+	CVector3 rotVecQuat = q1.Rotate(v);
 
-	CVector3 rotMat = m1.Rotate(v);
+	CVector3 rotVecMat = m1.TransformVector(v); //rotates vector by matrix
 
 	
-	cout << rotVec << endl << m2 << endl;
+	cout << rotVecQuat << endl << rotVecMat << endl;
 
 
 
