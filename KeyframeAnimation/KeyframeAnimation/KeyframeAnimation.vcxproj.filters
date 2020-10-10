@@ -1,0 +1,210 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Scene">
+      <UniqueIdentifier>{422b37d9-d868-405d-b596-ee526fc9053b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Common">
+      <UniqueIdentifier>{8ead696c-6283-4c3c-9a68-6b583e786719}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render">
+      <UniqueIdentifier>{d700c48d-a252-40cd-a894-277712690876}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Shaders">
+      <UniqueIdentifier>{767aedfa-d191-4a31-8c40-5d1bbb7767a9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Render\Import">
+      <UniqueIdentifier>{e5892b7c-2979-4a42-9973-20baeb6af3c9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UI">
+      <UniqueIdentifier>{3cb40a1c-0206-4f9f-bf91-2dac3e2c3beb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Math">
+      <UniqueIdentifier>{826901fe-f588-4582-a386-33c04a97fd72}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Source\Scene\Camera.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Scene\Light.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Scene\Model.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Scene\QModel.cpp">
+      <Filter>Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Common\CFatalException.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Common\MSDefines.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Common\Utility.cpp">
+      <Filter>Common</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Render\Mesh.cpp">
+      <Filter>Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Render\RenderMethod.cpp">
+      <Filter>Render</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Render\CImportXFile.cpp">
+      <Filter>Render\Import</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\UI\Input.cpp">
+      <Filter>UI</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Math\BaseMath.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Math\CMatrix2x2.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Math\CMatrix3x3.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Math\CMatrix4x4.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Math\CQuaternion.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Math\CQuatTransform.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Math\CVector2.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Math\CVector3.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Math\CVector4.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Math\MathIO.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\KeyframeAnimation.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Source\Scene\Camera.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Scene\Light.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Scene\Model.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Scene\QModel.h">
+      <Filter>Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Common\CFatalException.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Common\Defines.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Common\Error.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Common\MSDefines.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Common\Utility.h">
+      <Filter>Common</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Render\Colour.h">
+      <Filter>Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Render\Mesh.h">
+      <Filter>Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Render\RenderMethod.h">
+      <Filter>Render</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Render\CImportXFile.h">
+      <Filter>Render\Import</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Render\MeshData.h">
+      <Filter>Render\Import</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\UI\Input.h">
+      <Filter>UI</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Math\BaseMath.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Math\CMatrix2x2.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Math\CMatrix3x3.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Math\CMatrix4x4.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Math\CQuaternion.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Math\CQuatTransform.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Math\CVector2.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Math\CVector3.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Math\CVector4.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Math\MathDX.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Math\MathIO.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Source\Render\DiffuseColour.psh">
+      <Filter>Render\Shaders</Filter>
+    </None>
+    <None Include="Source\Render\DiffuseColourTex.psh">
+      <Filter>Render\Shaders</Filter>
+    </None>
+    <None Include="Source\Render\PixelLit.psh">
+      <Filter>Render\Shaders</Filter>
+    </None>
+    <None Include="Source\Render\PixelLit.vsh">
+      <Filter>Render\Shaders</Filter>
+    </None>
+    <None Include="Source\Render\PixelLitTex.psh">
+      <Filter>Render\Shaders</Filter>
+    </None>
+    <None Include="Source\Render\PixelLitTex.vsh">
+      <Filter>Render\Shaders</Filter>
+    </None>
+    <None Include="Source\Render\PlainColour.psh">
+      <Filter>Render\Shaders</Filter>
+    </None>
+    <None Include="Source\Render\TextureOnly.psh">
+      <Filter>Render\Shaders</Filter>
+    </None>
+    <None Include="Source\Render\VertexLit.vsh">
+      <Filter>Render\Shaders</Filter>
+    </None>
+    <None Include="Source\Render\VertexLitTex.vsh">
+      <Filter>Render\Shaders</Filter>
+    </None>
+    <None Include="Source\Render\XFormOnly.vsh">
+      <Filter>Render\Shaders</Filter>
+    </None>
+    <None Include="Source\Render\XFormTex.vsh">
+      <Filter>Render\Shaders</Filter>
+    </None>
+  </ItemGroup>
+</Project>

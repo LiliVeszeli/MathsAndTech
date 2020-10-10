@@ -1,0 +1,69 @@
+34 Nodes
+
+Node 0 - Root: 0.0
+
+Node 1 - Frame_World: 0.0
+
+Node 2 - Frame_ed_209: 1.0
+
+Node 3 - Frame_ED_MstrDum: 1.0
+
+Node 4 - Frame_ED_hip: 0.0
+
+Node 5 - Frame_ED_hip__1: 0.0
+
+Node 6 - Frame_ED_body: 0.0
+
+Node 7 - Frame_ED_arm: 0.0
+
+Node 8 - Frame_ED_arm_R: 0.0
+
+Node 9 - Frame_ED_body__1: 0.0
+
+Node 10 - Frame_ED_legtp_R: 1.0
+
+Node 11 - Frame_ED_legpsR1: 0.0
+
+Node 12 - Frame_ED_legps_R: 0.0
+
+Node 13 - Frame_ED_legtp_R__1: 0.0
+
+Node 14 - Frame_ED_legpv_R: 0.0
+
+Node 15 - Frame_ED_legpv_R__1: 0.0
+
+Node 16 - Frame_ED_shin_R: 1.0
+
+Node 17 - Frame_ED_shin_R__1: 0.0
+
+Node 18 - Frame_ED_toe_RB: 1.0
+
+Node 19 - Frame_ED_toe_RF: 1.0
+
+Node 20 - Frame_ED_toe_RL: 1.0
+
+Node 21 - Frame_ED_toe_RR: 1.0
+
+Node 22 - Frame_ED_legtp_L: 1.0
+
+Node 23 - Frame_ED_legpsL1: 0.0
+
+Node 24 - Frame_ED_legps_L: 0.0
+
+Node 25 - Frame_ED_legtp_L__1: 0.0
+
+Node 26 - Frame_ED_legpv_L: 0.0
+
+Node 27 - Frame_ED_legpv_L__1: 0.0
+
+Node 28 - Frame_ED_shin_L: 1.0
+
+Node 29 - Frame_ED_shin_L__1: 0.0
+
+Node 30 - Frame_ED_toe_LB: 1.0
+
+Node 31 - Frame_ED_toe_LF: 1.0
+
+Node 32 - Frame_ED_toe_LL: 1.0
+
+Node 33 - Frame_ED_toe_LR: 1.0
