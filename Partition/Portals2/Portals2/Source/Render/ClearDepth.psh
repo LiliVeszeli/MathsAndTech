@@ -1,0 +1,47 @@
+/**********************************************
+	ClearDepth.psh
+
+	Simple pixel shader that sets all pixels to
+	a single colour - no lighting or textures
+	and sets depth to 1
+***********************************************/
+
+//-----------------------------------------------------------------------------
+// Global variables
+//-----------------------------------------------------------------------------
+
+// All pixels output in this colour
+float3 MaterialColour;
+
+
+//-----------------------------------------------------------------------------
+// Input / output structures
+//-----------------------------------------------------------------------------
+
+// Input to Pixel Shader
+struct PS_Input
+{
+	// No input needed
+};
+
+// Output from Pixel Shader
+struct PS_Output
+{
+	float4 Colour : COLOR0;
+	float  Depth  : DEPTH; // Write a specific depth value for this pixel rather
+	                       // than use the depth calculated from the vertex shader
+};
+
+
+//-----------------------------------------------------------------------------
+// Main function
+//-----------------------------------------------------------------------------
+
+// Main pixel shader function - clear the polygon a single colour and set furthest depth value
+// Effectively clears the screen in the area of the polygon
+void main( in PS_Input i, out PS_Output o ) 
+{
+    o.Colour.rgb = 0.5;
+    o.Colour.a = 1.0f;
+    o.Depth = 1.0f;
+}

@@ -1,0 +1,45 @@
+/**********************************************
+	DiffuseColourTex.psh
+
+	Pixel shader that combines diffuse colour
+	from vertex shader with texture colour
+***********************************************/
+
+//-----------------------------------------------------------------------------
+// Global variables
+//-----------------------------------------------------------------------------
+
+// Access to texture
+sampler2D Tex0;
+
+
+//-----------------------------------------------------------------------------
+// Input / output structures
+//-----------------------------------------------------------------------------
+
+// Input to Pixel Shader
+struct PS_Input
+{
+	float3 DiffuseColour : COLOR0;
+	float2 TexCoord0     : TEXCOORD0;
+};
+
+// Output from Pixel Shader
+struct PS_Output
+{
+	float4 Colour : COLOR0;
+};
+
+
+//-----------------------------------------------------------------------------
+// Main function
+//-----------------------------------------------------------------------------
+
+// Main pixel shader function
+void main( in PS_Input i, out PS_Output o ) 
+{
+	// Output colour is input diffuse multiplied by texture colour
+	float4 Texture0 = tex2D( Tex0, i.TexCoord0 );
+    o.Colour.xyz = i.DiffuseColour * Texture0;
+    o.Colour.a = Texture0.a;
+}

@@ -115,7 +115,7 @@ SPartition Partitions[NumPartitions] =
 		-500.0f, 500.0f,  0.0f, 1000.0f,  -500.0f, 500.0f, // Partition bounds
 		// PVS list - currently empty. Entries should be in the form 2, {1, 5} to indicate
 		// 2 potentially visible partitions 1 & 5
-		0, {}, 
+		5, {1, 2, 3, 4, 6}, 
 		// 5 portals - first portal uses poly "0" from array below, the *back* of the polygon
 		// is the portal's visible side ("false") and it leads to partition "1". Etc.
 		5, { {0, false, 1}, {1, false, 6}, {6, false, 2}, {7, true, 3}, {8, true, 3} }, 
@@ -123,37 +123,37 @@ SPartition Partitions[NumPartitions] =
 
 	{ // Partition B (1)
 		-2.50f, -0.50f,  -20.0f, 2.55f,  -4.70f, -3.15f,
-		0, {}, 
+		3, {0, 2, 3}, 
 		2, { {0, true, 0}, {2, false, 2} },
 	},
 
 	{ // Partition C (2)
 		-3.60f, 0.45f,  -20.0f, 3.05f,  -3.15f, -0.05f,
-		0, {}, 
+		3, {0, 1, 3}, 
 		3, { {2, true, 1}, {3, false, 3}, {6, true, 0} },
 	},
 
 	{ // Partition D (3)
 		-3.60f, 3.55f,  -20.0f, 3.05f,  -0.05f, 4.00f,
-		0, {}, 
+		4, {0, 1, 2, 4}, 
 		4, { {3, true, 2}, {4, false, 4}, {7, false, 0}, {8, false, 0} },
 	},
 
 	{ // Partition E (4)
 		3.55f, 5.60f,  -20.0f, 3.05f,  -3.10f, 4.00f,
-		0, {}, 
+		3, {0, 3, 5}, 
 		2, { {4, true, 3}, {5, false, 5} },
 	},
 
 	{ // Partition F (5)
 		0.45f, 3.55f,  -20.0f, 3.05f,  -3.10f, -0.05f,
-		0, {}, 
+		1, {4}, 
 		1, {5, true, 4},
 	},
 
 	{ // Partition G (6)
 		-9.50f, -8.00f,  -20.0f, 2.55f,  -4.00f, -1.00f,
-		0, {}, 
+		4, {0, 2, 3, 4}, 
 		1, {1, true, 0},
 	},
 };
@@ -423,6 +423,7 @@ void RenderPortals( int part, CCamera* camera, int minX, int minY, int maxX, int
 		// Get vector from portal to camera
 		CVector3 portalCamera;
 		//++++ MISSING - initialise variable 'portalCamera'
+		portalCamera = camera->Position() - CVector3(PortalPolys[poly][0]);
 
 		// Get facing vector of portal
 		CVector3 portalVec0 = PortalPolys[poly][1] - PortalPolys[poly][0];
@@ -451,15 +452,15 @@ void RenderPortals( int part, CCamera* camera, int minX, int minY, int maxX, int
 					}
 					if (x > portalMaxX)
 					{
-						//++++ MISSING
+						portalMaxX = x;
 					}
 					if (y < portalMinY)
 					{
-						//++++ MISSING
+						portalMinY = y;
 					}
 					if (y > portalMaxY)
 					{
-						//++++ MISSING
+						portalMaxY = y;
 					}
 				}
 			}
@@ -480,10 +481,11 @@ void RenderPortals( int part, CCamera* camera, int minX, int minY, int maxX, int
 				if (!Partitions[newPart].Rendered)
 				{
 					// Render the new partition
-					//++++ MISSING
+					RenderPartition(newPart, MainCamera);
 
 					// Render portals of new partition if visible in the new screen area
 					//++++ MISSING
+					RenderPortals(newPart, MainCamera, newMinX, newMinY, newMaxX, newMaxY);
 				}
 			}
 		}
@@ -520,20 +522,30 @@ void RenderScene( float updateTime )
 		}
 
 		// Find starting partition - always choosing 0 here - add correct code for exercise
-		int start = 0; 
+		int start = GetPartitionFromPt(MainCamera->Position());
 
 		// Render all entities in this partition
-		RenderPartition( GetPartitionFromPt(MainCamera->Position()), MainCamera );
+		RenderPartition( start, MainCamera );
 
 
 		//****** Render PVS here ********
 		// Go through this partition's PVS and render each partition in it
+		//for (int i = 0; i < Partitions[GetPartitionFromPt(MainCamera->Position())].PVSSize; i++)
+		//{
+			//RenderPartition(Partitions[GetPartitionFromPt(MainCamera->Position())].PVS[i], MainCamera);
+			//RenderPartition(start, MainCamera);
 
+		//}
+		
 
 		//****** Render Portals here ********
 		// Render those partitions visible (in the viewport) through portals in
 		// the starting partition
 
+			
+
+			RenderPortals(start, MainCamera, 0, 0, ViewportWidth -1, ViewportHeight-1);
+		
 
 		// Draw on-screen text
 		RenderSceneText( updateTime );
