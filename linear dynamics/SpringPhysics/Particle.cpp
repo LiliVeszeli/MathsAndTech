@@ -116,14 +116,35 @@ void CParticle::ApplyForces( float updateTime, CVector3 externalForces )
 {
 	// Do nothing if particle is pinned
 	//...
+	if (m_Pinned) return;
 
 
 	// Iterate through list of attached springs and get force exerted by each - accumulate into a total force
 	// Also add external forces to the total
 	//...
-
+	CVector3 force = externalForces;
+	list<CSpring*>::iterator itSpring = m_Springs.begin();
+	while (itSpring != m_Springs.end())
+	{
+		CVector3 springForce = (*itSpring)->CalculateForce(this);
+		force += springForce;
+		itSpring++;
+	}
 
 	// Get acceleration from force, then use an initial value method to update position (and velocity)
 	// Call the SetPosition function with new position to update position of models
 	//...
+
+	m_Acceleration = force / m_Mass;
+
+	/*CVector3 newPosition;
+	float damp = Pow(0.9f, updateTime);
+	newPosition = (1 + damp) * m_Position - damp * m_PrevPosition + m_Acceleration * updateTime * updateTime;
+	m_PrevPosition = m_Position;*/
+
+	m_Position += updateTime * m_Velocity;
+	m_Velocity += updateTime * m_Acceleration;
+	m_Velocity *= Pow(0.9f, updateTime);
+
+	SetPosition(m_Position);
 }

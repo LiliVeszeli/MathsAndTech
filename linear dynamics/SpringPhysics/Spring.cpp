@@ -208,14 +208,33 @@ CVector3 CSpring::CalculateForce( CParticle* particle )
 
 	// Calculate strength of force based on current spring length and inertial length
 	float forceStrength;
-	//...
+	//F = -k(L-E)
+	//float coefficient = GetCoefficient();
+	//float inertialLenght = GetInertialLength();
+	//float length = distance(m_Particle1, m_Particle2);
 
+	//forceStrength = -coefficient * (length - inertialLenght);
+
+	CVector3 springVec(m_Particle1->GetPosition(), m_Particle2->GetPosition());
+	float currLength = Length(springVec);
+	forceStrength = (currLength - m_InertialLength) * m_SpringCoefficient;
 
 	// Return force as vector - ensure direction is correct for the given particle. Length of vector should be force strength from above
 	//...
 
+	//CVector3 force = Normalise(m_Particle1->GetPosition() - m_Particle2->GetPosition());
+	//force = force * forceStrength;
+	CVector3 force = forceStrength * springVec / currLength;
 
-	return CVector3::kZero; // temporary line to make code compile, change it when you implement this function
+	if (particle == m_Particle1)
+	{
+		return force;
+	}
+	else
+	{
+		return -force;
+	}
+
 }
 
 
@@ -225,6 +244,7 @@ void CSpring::ApplyConstraints()
 {
 	// No constraints on springs or elastic, so just return on those types
 	//...
+	if (m_Type == Spring || m_Type == Elastic) return;
 
 
 	// Calculate current length of spring, and difference between that and the inertial length.
