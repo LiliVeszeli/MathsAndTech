@@ -582,6 +582,9 @@ void FullScreenPostProcess(PostProcess postProcess)
 
 	// Draw a quad
 	gD3DContext->Draw(4, 0);
+
+	// I like you :3
+	// I wanted to leave a cute note but i think paul got the wrong idea, sorry :(
 }
 
 
