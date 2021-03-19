@@ -1,0 +1,34 @@
+General Layout of a class:
+
+-----------------------
+Header Guard / Namespaces / Include files
+
+class ABC 
+{
+-----------------------
+Public Types (enums/structs/classes only relevant to this class, but available publicly)
+
+-----------------------
+Constructors
+
+-----------------------
+Data Access (getters/setters)
+
+-----------------------
+Public Interface (functions that operate the class)
+
+
+=======================
+=======================
+
+
+Private Types (enums/structs etc only used in implementing the class)
+
+-----------------------
+Private functions (not for public use - helper functions for implementation)
+
+-----------------------
+Private data
+
+-----------------------
+}
