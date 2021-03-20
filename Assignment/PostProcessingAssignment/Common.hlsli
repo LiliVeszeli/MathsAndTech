@@ -155,6 +155,12 @@ cbuffer PostProcessingConstants : register(b1)
     
     float3 gTintColour2;
     float paddingG;
+    
+    float3 gTintColourWater;
+    float paddingH;
+    
+    float gSWaterWiggle;
+    float3 paddingI;
 }
 
 //**************************

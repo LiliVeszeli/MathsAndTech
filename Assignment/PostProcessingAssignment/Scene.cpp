@@ -41,6 +41,7 @@ enum class PostProcess
 	Spiral,
 	HeatHaze,
 	Blur,
+	Water,
 };
 
 enum class PostProcessMode
@@ -502,6 +503,11 @@ void SelectPostProcessShaderAndTextures(PostProcess postProcess)
 		gD3DContext->PSSetShader(gBlurPostProcess, nullptr, 0);
 	}
 
+	else if (postProcess == PostProcess::Water)
+	{
+		gD3DContext->PSSetShader(gWaterPostProcess, nullptr, 0);
+	}
+
 	else if (postProcess == PostProcess::GreyNoise)
 	{
 		gD3DContext->PSSetShader(gGreyNoisePostProcess, nullptr, 0);
@@ -836,13 +842,25 @@ void UpdateScene(float frameTime)
 		{
 			gCurrentPostProcess = PostProcess::None;
 		}
-		else //if (gCurrentPostProcess == PostProcess::None)
+		else 
 		{
 			gCurrentPostProcess = PostProcess::Blur;
 		}
 	}
+
+	if (KeyHit(Key_3))
+	{
+		if (gCurrentPostProcess == PostProcess::Water)
+		{
+			gCurrentPostProcess = PostProcess::None;
+		}
+		else 
+		{
+			gCurrentPostProcess = PostProcess::Water;
+		}
+	}
 	if (KeyHit(Key_7))   gCurrentPostProcess = PostProcess::GreyNoise;
-	if (KeyHit(Key_3))   gCurrentPostProcess = PostProcess::Burn;
+	if (KeyHit(Key_8))   gCurrentPostProcess = PostProcess::Burn;
 	if (KeyHit(Key_4))   gCurrentPostProcess = PostProcess::Distort;
 	if (KeyHit(Key_5))   gCurrentPostProcess = PostProcess::Spiral;
 	if (KeyHit(Key_6))   gCurrentPostProcess = PostProcess::HeatHaze;
@@ -873,6 +891,8 @@ void UpdateScene(float frameTime)
 	gPostProcessingConstants.tintColour = { 0.6f, 0, 0.5f };
 	gPostProcessingConstants.tintColour2 = { 0, 0, 1.0f };
 
+	gPostProcessingConstants.tintColourWater = { 0, 0.35f, 0.7f };
+
 	// Noise scaling adjusts how fine the grey noise is.
 	const float grainSize = 140; // Fineness of the noise grain
 	gPostProcessingConstants.noiseScale  = { gViewportWidth / grainSize, gViewportHeight / grainSize };
@@ -892,6 +912,8 @@ void UpdateScene(float frameTime)
 	const float wiggleSpeed = 1.0f;
 	gPostProcessingConstants.spiralLevel = ((1.0f - cos(wiggle)) * 4.0f );
 	wiggle += wiggleSpeed * frameTime;
+
+	gPostProcessingConstants.waterWiggle += frameTime;
 
 	// Update heat haze timer
 	gPostProcessingConstants.heatHazeTimer += frameTime;
