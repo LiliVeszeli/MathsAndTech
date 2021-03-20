@@ -131,7 +131,7 @@ cbuffer PostProcessingConstants : register(b1)
 
 	// Tint post-process settings
 	float3 gTintColour;
-	float  paddingB;
+    float paddingB;
 
 	// Grey noise post-process settings
     float2 gNoiseScale;
@@ -152,6 +152,9 @@ cbuffer PostProcessingConstants : register(b1)
 	// Heat haze post-process settings
 	float  gHeatHazeTimer;
 	float3 paddingF;
+    
+    float3 gTintColour2;
+    float paddingG;
 }
 
 //**************************

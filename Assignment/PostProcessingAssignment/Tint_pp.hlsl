@@ -23,7 +23,7 @@ SamplerState PointSample  : register(s0); // We don't usually want to filter (bi
 // Post-processing shader that tints the scene texture to a given colour
 float4 main(PostProcessingInput input) : SV_Target
 {
-	
+    float strength = 3.0f;
 	
 	// Calculate alpha to display the effect in a softened circle, could use a texture rather than calculations for the same task.
 	// Uses the second set of area texture coordinates, which range from (0,0) to (1,1) over the area being processed
@@ -31,11 +31,13 @@ float4 main(PostProcessingInput input) : SV_Target
     float2 centreVector = input.areaUV - float2(0.5f, 0.5f);
     float centreLengthSq = dot(centreVector, centreVector);
     float alpha = 1.0f - saturate((centreLengthSq - 0.25f + softEdge) / softEdge); // Soft circle calculation based on fact that this circle has a radius of 0.5 (as area UVs go from 0->1)
-	
+    
+	//interpolating between the two colours 
+    float3 finalTint = lerp(gTintColour, gTintColour2, input.sceneUV.y) * strength;
 	
 	// Sample a pixel from the scene texture and multiply it with the tint colour (comes from a constant buffer defined in Common.hlsli)
-    float3 colour = SceneTexture.Sample(PointSample, input.sceneUV).rgb * gTintColour;
+    float3 colour = SceneTexture.Sample(PointSample, input.sceneUV).rgb * finalTint;
 	
 	// Got the RGB from the scene texture, set alpha to 1 for final output
-	return float4(colour, alpha);
+	return float4(colour, 1.0f);
 }

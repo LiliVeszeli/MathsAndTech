@@ -40,6 +40,7 @@ enum class PostProcess
 	Distort,
 	Spiral,
 	HeatHaze,
+	Blur,
 };
 
 enum class PostProcessMode
@@ -496,6 +497,11 @@ void SelectPostProcessShaderAndTextures(PostProcess postProcess)
 		gD3DContext->PSSetShader(gTintPostProcess, nullptr, 0);
 	}
 
+	else if (postProcess == PostProcess::Blur)
+	{
+		gD3DContext->PSSetShader(gBlurPostProcess, nullptr, 0);
+	}
+
 	else if (postProcess == PostProcess::GreyNoise)
 	{
 		gD3DContext->PSSetShader(gGreyNoisePostProcess, nullptr, 0);
@@ -813,8 +819,29 @@ void UpdateScene(float frameTime)
 	if (KeyHit(Key_F2))  gCurrentPostProcessMode = PostProcessMode::Area;
 	if (KeyHit(Key_F3))  gCurrentPostProcessMode = PostProcessMode::Polygon;
 
-	if (KeyHit(Key_1))   gCurrentPostProcess = PostProcess::Tint;
-	if (KeyHit(Key_2))   gCurrentPostProcess = PostProcess::GreyNoise;
+	if (KeyHit(Key_1))
+	{
+		if (gCurrentPostProcess == PostProcess::Tint)
+		{
+			gCurrentPostProcess = PostProcess::None;
+		}
+		else //if (gCurrentPostProcess == PostProcess::None)
+		{
+			gCurrentPostProcess = PostProcess::Tint;
+		}
+	}
+	if (KeyHit(Key_2))
+	{
+		if (gCurrentPostProcess == PostProcess::Blur)
+		{
+			gCurrentPostProcess = PostProcess::None;
+		}
+		else //if (gCurrentPostProcess == PostProcess::None)
+		{
+			gCurrentPostProcess = PostProcess::Blur;
+		}
+	}
+	if (KeyHit(Key_7))   gCurrentPostProcess = PostProcess::GreyNoise;
 	if (KeyHit(Key_3))   gCurrentPostProcess = PostProcess::Burn;
 	if (KeyHit(Key_4))   gCurrentPostProcess = PostProcess::Distort;
 	if (KeyHit(Key_5))   gCurrentPostProcess = PostProcess::Spiral;
@@ -843,7 +870,8 @@ void UpdateScene(float frameTime)
 	// Post processing settings - all data for post-processes is updated every frame whether in use or not (minimal cost)
 	
 	// Colour for tint shader
-	gPostProcessingConstants.tintColour = { 1, 0, 0 };
+	gPostProcessingConstants.tintColour = { 0.6f, 0, 0.5f };
+	gPostProcessingConstants.tintColour2 = { 0, 0, 1.0f };
 
 	// Noise scaling adjusts how fine the grey noise is.
 	const float grainSize = 140; // Fineness of the noise grain
