@@ -583,8 +583,6 @@ void FullScreenPostProcess(PostProcess postProcess)
 	// Draw a quad
 	gD3DContext->Draw(4, 0);
 
-	// I like you :3
-
 }
 
 
