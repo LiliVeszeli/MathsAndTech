@@ -71,9 +71,9 @@ float4 main(PostProcessingInput input) : SV_Target
 
     //return float4(textureColor, 1.0);
    
-    float4 tex;
-    tex = SceneTexture.Sample(PointSample, input.sceneUV.xy) * 0.6f;
-    tex += SceneTexture.Sample(PointSample, input.sceneUV.xy + (0.004)) * 0.2f;
+    //float4 tex;
+    //tex = SceneTexture.Sample(PointSample, input.sceneUV.xy) * 0.6f;
+    //tex += SceneTexture.Sample(PointSample, input.sceneUV.xy + (0.004)) * 0.2f;
     
     float3 colour = float3(0.0f, 0.0f, 0.0f);
     
@@ -101,7 +101,7 @@ float4 main(PostProcessingInput input) : SV_Target
     float centreLengthSq = dot(centreVector, centreVector);
     float alpha = 1.0f - saturate((centreLengthSq - 0.25f + softEdge) / softEdge);
     
-    tex.a = alpha;
+    //tex.a = alpha;
     
     return float4(colour, alpha);
     

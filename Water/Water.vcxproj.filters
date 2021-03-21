@@ -121,5 +121,6 @@
     <FxCompile Include="BasicTransformWorldPos_vs.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="..\..\project\Flow Stitch\shader1.fx" />
   </ItemGroup>
 </Project>
