@@ -23,10 +23,7 @@ SamplerState PointSample : register(s0); // We don't usually want to filter (bil
 // Post-processing shader that tints the scene texture to a given colour
 float4 main(PostProcessingInput input) : SV_Target
 {
-   //moves texture
-   //input.sceneUV.y += (sin(input.sceneUV.y + (5 * gSpiralLevel)) + 1) * 0.5f;
-   //input.sceneUV.x += (cos(input.sceneUV.x + (5 * gSpiralLevel)) + 1) * 0.5f;
-    
+
     input.sceneUV.x += sin(input.sceneUV.y * 3.14159 * 14 + gSWaterWiggle) / 300;
     
 	

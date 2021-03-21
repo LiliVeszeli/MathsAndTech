@@ -75,6 +75,25 @@ float4 main(PostProcessingInput input) : SV_Target
     tex = SceneTexture.Sample(PointSample, input.sceneUV.xy) * 0.6f;
     tex += SceneTexture.Sample(PointSample, input.sceneUV.xy + (0.004)) * 0.2f;
     
+    float3 colour = float3(0.0f, 0.0f, 0.0f);
+    
+    float offsetX = 1 / gViewportWidth * 4;
+    float offsetY = 1 / gViewportHeight * 3;
+
+    colour += SceneTexture.Sample(PointSample, input.sceneUV + float2(-offsetX, -offsetY));
+    colour += SceneTexture.Sample(PointSample, input.sceneUV + float2(0, -offsetY));
+    colour += SceneTexture.Sample(PointSample, input.sceneUV + float2(+offsetX, -offsetY));
+
+    colour += SceneTexture.Sample(PointSample, input.sceneUV + float2(-offsetX, 0));
+    colour += SceneTexture.Sample(PointSample, input.sceneUV + float2(0, 0));
+    colour += SceneTexture.Sample(PointSample, input.sceneUV + float2(+offsetX, 0));
+
+    colour += SceneTexture.Sample(PointSample, input.sceneUV + float2(-offsetX, +offsetY));
+    colour += SceneTexture.Sample(PointSample, input.sceneUV + float2(0, +offsetY));
+    colour += SceneTexture.Sample(PointSample, input.sceneUV + float2(+offsetX, +offsetY));
+
+    colour /= 9;
+    
     // Calculate alpha to display the effect in a softened circle, could use a texture rather than calculations for the same task.
 	// Uses the second set of area texture coordinates, which range from (0,0) to (1,1) over the area being processed
     float softEdge = 0.20f; // Softness of the edge of the circle - range 0.001 (hard edge) to 0.25 (very soft)
@@ -84,6 +103,6 @@ float4 main(PostProcessingInput input) : SV_Target
     
     tex.a = alpha;
     
-    return tex;
+    return float4(colour, alpha);
     
 }
