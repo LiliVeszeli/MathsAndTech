@@ -120,7 +120,7 @@ struct PostProcessingConstants
 
 	// Tint post-process settings
 	CVector3 tintColour;
-	float paddingB;
+	float frameTime;
 	
 
 	// Grey noise post-process settings

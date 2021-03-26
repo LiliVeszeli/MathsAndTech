@@ -131,7 +131,7 @@ cbuffer PostProcessingConstants : register(b1)
 
 	// Tint post-process settings
 	float3 gTintColour;
-    float paddingB;
+    float gFrameTime;
 
 	// Grey noise post-process settings
     float2 gNoiseScale;

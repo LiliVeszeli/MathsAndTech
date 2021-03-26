@@ -892,6 +892,7 @@ void UpdateScene(float frameTime)
 	gPostProcessingConstants.tintColour2 = { 0, 0, 1.0f };
 
 	gPostProcessingConstants.tintColourWater = { 0, 0.35f, 0.7f };
+	gPostProcessingConstants.frameTime += frameTime;
 
 	// Noise scaling adjusts how fine the grey noise is.
 	const float grainSize = 140; // Fineness of the noise grain
