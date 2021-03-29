@@ -169,7 +169,7 @@ float3 HSLtoRGB(in float3 HSL)
 
 //    return float3(h, s, l);
 //}
-
+//function based on https://www.rapidtables.com/convert/color/rgb-to-hsl.html
 float3 RGBToHSL2(float3 rgb)
 {
     float max = Max(rgb.r, rgb.g, rgb.b);
@@ -216,7 +216,7 @@ float3 RGBToHSL2(float3 rgb)
         return float3(h, s, l);
 }
 
-
+//function based on https://www.rapidtables.com/convert/color/hsl-to-rgb.html
 float3 HSLToRGB2(float3 hsl)
 {
     float C = (1 - abs(2*hsl.b -1)) * hsl.g;
@@ -272,21 +272,11 @@ float4 main(PostProcessingInput input) : SV_Target
     float centreLengthSq = dot(centreVector, centreVector);
     float alpha = 1.0f - saturate((centreLengthSq - 0.25f + softEdge) / softEdge); // Soft circle calculation based on fact that this circle has a radius of 0.5 (as area UVs go from 0->1)
     
-	
-    
-    
+ 
     //convert to HSL1
-   
-    
-   
-    
-   
-	
-	// Sample a pixel from the scene texture and multiply it with the tint colour (comes from a constant buffer defined in Common.hlsli)
-  
-    
     float3 HSLColour = RGBToHSL2(gTintColour);
     
+    //changing hue
     HSLColour.r += 20*gFrameTime;
     
    while (HSLColour.r >= 360)
@@ -298,9 +288,9 @@ float4 main(PostProcessingInput input) : SV_Target
     
     
     //convert to HSL2
-
     float3 HSLColour2 = RGBToHSL2(gTintColour2);
     
+    //changing hue
     HSLColour2.r += 20 * gFrameTime;
     
     while (HSLColour2.r >= 360)
@@ -312,8 +302,9 @@ float4 main(PostProcessingInput input) : SV_Target
     
     //interpolating between the two colours 
     float3 finalTint = lerp(RGBColour, RGBColour2, input.sceneUV.y) * strength;
+    // Sample a pixel from the scene texture and multiply it with the tint colour (comes from a constant buffer defined in Common.hlsli)
     float3 colour = SceneTexture.Sample(PointSample, input.sceneUV).rgb * finalTint;
    
-	// Got the RGB from the scene texture, set alpha to 1 for final output
+	// Got the RGB from the scene texture, and calculated alpha
     return float4(colour, alpha);
 }

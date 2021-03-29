@@ -42,6 +42,8 @@ enum class PostProcess
 	HeatHaze,
 	Blur,
 	Water,
+	GaussianVertical,
+	GaussianHorizontal
 };
 
 enum class PostProcessMode
@@ -51,7 +53,9 @@ enum class PostProcessMode
 	Polygon,
 };
 
-auto gCurrentPostProcess     = PostProcess::None;
+//auto gCurrentPostProcess     = PostProcess::None; //make it a vector
+std::vector<PostProcess> gCurrentPostProcess{};
+//gCurrentPostProcess.push_back();
 auto gCurrentPostProcessMode = PostProcessMode::Fullscreen;
 
 //********************
@@ -150,6 +154,16 @@ ID3D11Texture2D*          gSceneTexture      = nullptr; // This object represent
 ID3D11RenderTargetView*   gSceneRenderTarget = nullptr; // This object is used when we want to render to the texture above
 ID3D11ShaderResourceView* gSceneTextureSRV   = nullptr; // This object is used to give shaders access to the texture above (SRV = shader resource view)
 
+// This texture will have the scene renderered on it. Then the texture is then used for post-processing
+ID3D11Texture2D* gSceneTexture2 = nullptr; // This object represents the memory used by the texture on the GPU
+ID3D11RenderTargetView* gSceneRenderTarget2 = nullptr; // This object is used when we want to render to the texture above
+ID3D11ShaderResourceView* gSceneTextureSRV2 = nullptr; // This object is used to give shaders access to the texture above (SRV = shader resource view)
+
+ID3D11Texture2D* gPostProcessTextures[2];
+ID3D11RenderTargetView* gPostProcessRenderTargets[2];
+ID3D11ShaderResourceView* gPostProcessTextureSRVs[2];
+
+int gCurrentPostProcessIndex;
 
 // Additional textures used for specific post-processes
 ID3D11Resource*           gNoiseMap = nullptr;
@@ -266,6 +280,14 @@ bool InitGeometry()
 		gLastError = "Error creating scene texture";
 		return false;
 	}
+	if (FAILED(gD3DDevice->CreateTexture2D(&sceneTextureDesc, NULL, &gSceneTexture2)))
+	{
+		gLastError = "Error creating scene texture";
+		return false;
+	}
+	gPostProcessTextures[0] = gSceneTexture;
+	gPostProcessTextures[1] = gSceneTexture2;
+
 
 	// We created the scene texture above, now we get a "view" of it as a render target, i.e. get a special pointer to the texture that
 	// we use when rendering to it (see RenderScene function below)
@@ -274,6 +296,13 @@ bool InitGeometry()
 		gLastError = "Error creating scene render target view";
 		return false;
 	}
+	if (FAILED(gD3DDevice->CreateRenderTargetView(gSceneTexture2, NULL, &gSceneRenderTarget2)))
+	{
+		gLastError = "Error creating scene render target view";
+		return false;
+	}
+	gPostProcessRenderTargets[0] = gSceneRenderTarget;
+	gPostProcessRenderTargets[1] = gSceneRenderTarget2;
 
 	// We also need to send this texture (resource) to the shaders. To do that we must create a shader-resource "view"
 	D3D11_SHADER_RESOURCE_VIEW_DESC srDesc = {};
@@ -286,7 +315,14 @@ bool InitGeometry()
 		gLastError = "Error creating scene shader resource view";
 		return false;
 	}
+	if (FAILED(gD3DDevice->CreateShaderResourceView(gSceneTexture2, &srDesc, &gSceneTextureSRV2)))
+	{
+		gLastError = "Error creating scene shader resource view";
+		return false;
+	}
 
+	gPostProcessTextureSRVs[0] = gSceneTextureSRV;
+	gPostProcessTextureSRVs[1] = gSceneTextureSRV2;
 
 	return true;
 }
@@ -348,6 +384,10 @@ void ReleaseResources()
 	if (gSceneTextureSRV)              gSceneTextureSRV->Release();
 	if (gSceneRenderTarget)            gSceneRenderTarget->Release();
 	if (gSceneTexture)                 gSceneTexture->Release();
+
+	if (gSceneTextureSRV2)              gSceneTextureSRV2->Release();
+	if (gSceneRenderTarget2)            gSceneRenderTarget2->Release();
+	if (gSceneTexture2)                 gSceneTexture2->Release();
 
 	if (gDistortMapSRV)                gDistortMapSRV->Release();
 	if (gDistortMap)                   gDistortMap->Release();
@@ -503,6 +543,15 @@ void SelectPostProcessShaderAndTextures(PostProcess postProcess)
 		gD3DContext->PSSetShader(gBlurPostProcess, nullptr, 0);
 	}
 
+	else if (postProcess == PostProcess::GaussianVertical)
+	{
+		gD3DContext->PSSetShader(gGaussianVerticalPostProcess, nullptr, 0);
+	}
+	else if (postProcess == PostProcess::GaussianHorizontal)
+	{
+		gD3DContext->PSSetShader(gGaussianHorizontalPostProcess, nullptr, 0);
+	}
+
 	else if (postProcess == PostProcess::Water)
 	{
 		gD3DContext->PSSetShader(gWaterPostProcess, nullptr, 0);
@@ -549,14 +598,17 @@ void SelectPostProcessShaderAndTextures(PostProcess postProcess)
 
 
 // Perform a full-screen post process from "scene texture" to back buffer
-void FullScreenPostProcess(PostProcess postProcess)
+void FullScreenPostProcess(PostProcess postProcess, ID3D11RenderTargetView* renderTarget)
 {
 	// Select the back buffer to use for rendering. Not going to clear the back-buffer because we're going to overwrite it all
-	gD3DContext->OMSetRenderTargets(1, &gBackBufferRenderTarget, gDepthStencil);
+	//gD3DContext->OMSetRenderTargets(1, &gBackBufferRenderTarget, gDepthStencil);
+
+	gD3DContext->OMSetRenderTargets(1, &renderTarget, gDepthStencil);
 
 	
 	// Give the pixel shader (post-processing shader) access to the scene texture 
-	gD3DContext->PSSetShaderResources(0, 1, &gSceneTextureSRV);
+	//gD3DContext->PSSetShaderResources(0, 1, &gSceneTextureSRV);
+	gD3DContext->PSSetShaderResources(0, 1, &gPostProcessTextureSRVs[gCurrentPostProcessIndex % 2]);
 	gD3DContext->PSSetSamplers(0, 1, &gPointSampler); // Use point sampling (no bilinear, trilinear, mip-mapping etc. for most post-processes)
 
 
@@ -594,7 +646,7 @@ void FullScreenPostProcess(PostProcess postProcess)
 
 	// Draw a quad
 	gD3DContext->Draw(4, 0);
-
+	gCurrentPostProcessIndex++;
 }
 
 
@@ -602,7 +654,7 @@ void FullScreenPostProcess(PostProcess postProcess)
 void AreaPostProcess(PostProcess postProcess, CVector3 worldPoint, CVector2 areaSize, float offset)
 {
 	// First perform a full-screen copy of the scene to back-buffer
-	FullScreenPostProcess(PostProcess::Copy);
+	FullScreenPostProcess(PostProcess::Copy, gPostProcessRenderTargets[(gCurrentPostProcessIndex + 1) % 2]);
 	
 
 	// Now perform a post-process of a portion of the scene to the back-buffer (overwriting some of the copy above)
@@ -669,7 +721,7 @@ void AreaPostProcess(PostProcess postProcess, CVector3 worldPoint, CVector2 area
 void PolygonPostProcess(PostProcess postProcess, const std::array<CVector3, 4>& points, const CMatrix4x4& worldMatrix)
 {
 	// First perform a full-screen copy of the scene to back-buffer
-	FullScreenPostProcess(PostProcess::Copy);
+	FullScreenPostProcess(PostProcess::Copy, gPostProcessRenderTargets[(gCurrentPostProcessIndex + 1) % 2]);
 
 
 	// Now perform a post-process of a portion of the scene to the back-buffer (overwriting some of the copy above)
@@ -712,6 +764,8 @@ void RenderScene()
 {
 	//// Common settings ////
 
+	gCurrentPostProcessIndex = 0;
+
 	// Set up the light information in the constant buffer
 	// Don't send to the GPU yet, the function RenderSceneFromCamera will do that
 	gPerFrameConstants.light1Colour   = gLights[0].colour * gLights[0].strength;
@@ -737,6 +791,11 @@ void RenderScene()
 	{
 		gD3DContext->OMSetRenderTargets(1, &gSceneRenderTarget, gDepthStencil);
 		gD3DContext->ClearRenderTargetView(gSceneRenderTarget, &gBackgroundColor.r);
+
+		/*if (gCurrentPostProcess == PostProcess::Gaussian)
+		{
+
+		}*/
 	}
 	else
 	{
@@ -766,7 +825,9 @@ void RenderScene()
 	{
 		if (gCurrentPostProcessMode == PostProcessMode::Fullscreen)
 		{
-			FullScreenPostProcess(gCurrentPostProcess);
+			//FullScreenPostProcess(gCurrentPostProcess, gPostProcessRenderTargets[(gCurrentPostProcessIndex + 1) % 2]);
+			FullScreenPostProcess(PostProcess::GaussianVertical, gPostProcessRenderTargets[(gCurrentPostProcessIndex + 1) % 2]);
+			FullScreenPostProcess(PostProcess::GaussianHorizontal, gPostProcessRenderTargets[(gCurrentPostProcessIndex + 1) % 2]);
 		}
 
 		else if (gCurrentPostProcessMode == PostProcessMode::Area)
@@ -799,6 +860,7 @@ void RenderScene()
 
 		}
 
+		FullScreenPostProcess(PostProcess::Copy, gBackBufferRenderTarget);
 		// These lines unbind the scene texture from the pixel shader to stop DirectX issuing a warning when we try to render to it again next frame
 		ID3D11ShaderResourceView* nullSRV = nullptr;
 		gD3DContext->PSSetShaderResources(0, 1, &nullSRV);
@@ -857,6 +919,17 @@ void UpdateScene(float frameTime)
 		else 
 		{
 			gCurrentPostProcess = PostProcess::Water;
+		}
+	}
+	if (KeyHit(Key_G))
+	{
+		if (gCurrentPostProcess == PostProcess::GaussianVertical)
+		{
+			gCurrentPostProcess = PostProcess::None;
+		}
+		else
+		{
+			gCurrentPostProcess = PostProcess::GaussianVertical;
 		}
 	}
 	if (KeyHit(Key_7))   gCurrentPostProcess = PostProcess::GreyNoise;
