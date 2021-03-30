@@ -19,6 +19,11 @@
 #include "GraphicsHelpers.h" // Helper functions to unclutter the code here
 #include "ColourRGBA.h" 
 
+#include "External/imgui-master/imgui.h"
+
+#include "External/imgui-master/examples/imgui_impl_win32.h"
+#include "External/imgui-master/examples/imgui_impl_dx11.h"
+
 #include <array>
 #include <sstream>
 #include <memory>
@@ -105,6 +110,24 @@ ColourRGBA gBackgroundColor = { 0.3f, 0.3f, 0.4f, 1.0f };
 const float gLightOrbitRadius = 20.0f;
 const float gLightOrbitSpeed = 0.7f;
 
+
+bool tint = false;
+bool blur = false;
+bool gaussian = false;
+bool noise = false;
+bool burn = false;
+bool distort = false;
+bool spiral = false;
+bool water = false;
+
+bool tintBox = false;
+bool blurBox = false;
+bool gaussianBox = false;
+bool noiseBox = false;
+bool burnBox = false;
+bool distortBox = false;
+bool spiralBox = false;
+bool waterBox = false;
 
 
 //--------------------------------------------------------------------------------------
@@ -763,8 +786,13 @@ CVector3 pos = { 20, 15, 0 };
 void RenderScene()
 {
 	//// Common settings ////
+	ImGui_ImplDX11_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
 
 	gCurrentPostProcessIndex = 0;
+
+
 
 	// Set up the light information in the constant buffer
 	// Don't send to the GPU yet, the function RenderSceneFromCamera will do that
@@ -787,15 +815,10 @@ void RenderScene()
 	// Set the target for rendering and select the main depth buffer.
 	// If using post-processing then render to the scene texture, otherwise to the usual back buffer
 	// Also clear the render target to a fixed colour and the depth buffer to the far distance
-	if (gCurrentPostProcess != PostProcess::None)
+	if (!gCurrentPostProcess.empty())
 	{
 		gD3DContext->OMSetRenderTargets(1, &gSceneRenderTarget, gDepthStencil);
 		gD3DContext->ClearRenderTargetView(gSceneRenderTarget, &gBackgroundColor.r);
-
-		/*if (gCurrentPostProcess == PostProcess::Gaussian)
-		{
-
-		}*/
 	}
 	else
 	{
@@ -821,19 +844,27 @@ void RenderScene()
 	////--------------- Scene completion ---------------////
 
 	// Run any post-processing steps
-	if (gCurrentPostProcess != PostProcess::None)
+	if (!gCurrentPostProcess.empty())
 	{
 		if (gCurrentPostProcessMode == PostProcessMode::Fullscreen)
 		{
+			for (int i = 0; i < gCurrentPostProcess.size(); i++)
+			{
+				FullScreenPostProcess(gCurrentPostProcess[i], gPostProcessRenderTargets[(gCurrentPostProcessIndex + 1) % 2]);
+			}
 			//FullScreenPostProcess(gCurrentPostProcess, gPostProcessRenderTargets[(gCurrentPostProcessIndex + 1) % 2]);
-			FullScreenPostProcess(PostProcess::GaussianVertical, gPostProcessRenderTargets[(gCurrentPostProcessIndex + 1) % 2]);
-			FullScreenPostProcess(PostProcess::GaussianHorizontal, gPostProcessRenderTargets[(gCurrentPostProcessIndex + 1) % 2]);
+			//FullScreenPostProcess(PostProcess::GaussianVertical, gPostProcessRenderTargets[(gCurrentPostProcessIndex + 1) % 2]);
+			//FullScreenPostProcess(PostProcess::GaussianHorizontal, gPostProcessRenderTargets[(gCurrentPostProcessIndex + 1) % 2]);
 		}
 
 		else if (gCurrentPostProcessMode == PostProcessMode::Area)
 		{
-			// Pass a 3D point for the centre of the affected area and the size of the (rectangular) area in world units
-			AreaPostProcess(gCurrentPostProcess, gCube->Position(), { 22, 22 }, 15);
+			for (int i = 0; i < gCurrentPostProcess.size(); i++)
+			{
+				// Pass a 3D point for the centre of the affected area and the size of the (rectangular) area in world units
+				AreaPostProcess(gCurrentPostProcess[i], gCube->Position(), { 22, 22 }, 15);
+			}
+			
 		}
 
 		else if (gCurrentPostProcessMode == PostProcessMode::Polygon)
@@ -854,10 +885,11 @@ void RenderScene()
 			polyMatrix.e32 = pos.z;
 			polyMatrix = MatrixRotationY(ToRadians(1)) * polyMatrix;
 		
-				
-			// Pass an array of 4 points and a matrix. Only supports 4 points.
-			PolygonPostProcess(gCurrentPostProcess, points, polyMatrix);
-
+			for (int i = 0; i < gCurrentPostProcess.size(); i++)
+			{
+				// Pass an array of 4 points and a matrix. Only supports 4 points.
+				PolygonPostProcess(gCurrentPostProcess[i], points, polyMatrix);
+			}
 		}
 
 		FullScreenPostProcess(PostProcess::Copy, gBackBufferRenderTarget);
@@ -866,6 +898,43 @@ void RenderScene()
 		gD3DContext->PSSetShaderResources(0, 1, &nullSRV);
 	}
 
+	ImGui::Begin("Postprocess Control", 0, ImGuiWindowFlags_AlwaysAutoResize);
+	ImGui::Checkbox("Tint", &tintBox);	
+	ImGui::End();
+
+	ImGui::Begin("Postprocess Control", 0, ImGuiWindowFlags_AlwaysAutoResize);
+	ImGui::Checkbox("Box Blur", &blurBox);
+	ImGui::End();
+
+	ImGui::Begin("Postprocess Control", 0, ImGuiWindowFlags_AlwaysAutoResize);
+	ImGui::Checkbox("Underwater", &waterBox);
+	ImGui::End();
+
+	ImGui::Begin("Postprocess Control", 0, ImGuiWindowFlags_AlwaysAutoResize);
+	ImGui::Checkbox("Gaussian Blur     ", &gaussianBox);
+	ImGui::End();
+
+	ImGui::Begin("Postprocess Control", 0, ImGuiWindowFlags_AlwaysAutoResize);
+	ImGui::Checkbox("Grey Noise", &noiseBox);
+	ImGui::End();
+
+	ImGui::Begin("Postprocess Control", 0, ImGuiWindowFlags_AlwaysAutoResize);
+	ImGui::Checkbox("Spiral", &spiralBox);
+	ImGui::End();
+
+	ImGui::Begin("Postprocess Control", 0, ImGuiWindowFlags_AlwaysAutoResize);
+	ImGui::Checkbox("Distort", &distortBox);
+	ImGui::End();
+
+	ImGui::Begin("Postprocess Control", 0, ImGuiWindowFlags_AlwaysAutoResize);
+	ImGui::Checkbox("Burn", &burnBox);
+	ImGui::End();
+
+
+
+	ImGui::Render();
+	gD3DContext->OMSetRenderTargets(1, &gBackBufferRenderTarget, nullptr);
+	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 	// When drawing to the off-screen back buffer is complete, we "present" the image to the front buffer (the screen)
 	// Set first parameter to 1 to lock to vsync
 	gSwapChain->Present(lockFPS ? 1 : 0, 0);
@@ -881,64 +950,131 @@ void RenderScene()
 void UpdateScene(float frameTime)
 {
 	//***********
+	
 
 	// Select post process on keys
 	if (KeyHit(Key_F1))  gCurrentPostProcessMode = PostProcessMode::Fullscreen;
 	if (KeyHit(Key_F2))  gCurrentPostProcessMode = PostProcessMode::Area;
 	if (KeyHit(Key_F3))  gCurrentPostProcessMode = PostProcessMode::Polygon;
 
-	if (KeyHit(Key_1))
+
+	//TINT
+	if (tintBox == true)
 	{
-		if (gCurrentPostProcess == PostProcess::Tint)
+		if (tint == false)
 		{
-			gCurrentPostProcess = PostProcess::None;
-		}
-		else //if (gCurrentPostProcess == PostProcess::None)
-		{
-			gCurrentPostProcess = PostProcess::Tint;
+			gCurrentPostProcess.push_back(PostProcess::Tint);
+			tint = true;
 		}
 	}
-	if (KeyHit(Key_2))
+	else 
 	{
-		if (gCurrentPostProcess == PostProcess::Blur)
+		if (tint == true)
 		{
-			gCurrentPostProcess = PostProcess::None;
+			for (int i = 0; i < gCurrentPostProcess.size(); i++)
+			{
+				if (gCurrentPostProcess[i] == PostProcess::Tint)
+				{
+					gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
+					break;
+				}
+			}
+			tint = false;
 		}
-		else 
+	}
+		
+	//BLUR
+	if (blurBox == true)
+	{
+		if (blur == false)
 		{
-			gCurrentPostProcess = PostProcess::Blur;
+			gCurrentPostProcess.push_back(PostProcess::Blur);
+			blur = true;
+		}
+	}
+	else
+	{
+		if (blur == true)
+		{
+			for (int i = 0; i < gCurrentPostProcess.size(); i++)
+			{
+				if (gCurrentPostProcess[i] == PostProcess::Blur)
+				{
+					gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
+					break;
+				}
+			}
+			blur = false;
 		}
 	}
 
-	if (KeyHit(Key_3))
+	//WATER
+	if (waterBox == true)
 	{
-		if (gCurrentPostProcess == PostProcess::Water)
-		{
-			gCurrentPostProcess = PostProcess::None;
-		}
-		else 
-		{
-			gCurrentPostProcess = PostProcess::Water;
+		if (water == false)
+		{		
+			gCurrentPostProcess.push_back(PostProcess::Water);
+			water = true;
 		}
 	}
-	if (KeyHit(Key_G))
+	else
 	{
-		if (gCurrentPostProcess == PostProcess::GaussianVertical)
+		if (water == true)
 		{
-			gCurrentPostProcess = PostProcess::None;
-		}
-		else
-		{
-			gCurrentPostProcess = PostProcess::GaussianVertical;
+			water = false;
+			for (int i = 0; i < gCurrentPostProcess.size(); i++)
+			{
+				if (gCurrentPostProcess[i] == PostProcess::Water)
+				{
+					gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
+					break;
+				}
+			}
 		}
 	}
-	if (KeyHit(Key_7))   gCurrentPostProcess = PostProcess::GreyNoise;
-	if (KeyHit(Key_8))   gCurrentPostProcess = PostProcess::Burn;
-	if (KeyHit(Key_4))   gCurrentPostProcess = PostProcess::Distort;
-	if (KeyHit(Key_5))   gCurrentPostProcess = PostProcess::Spiral;
-	if (KeyHit(Key_6))   gCurrentPostProcess = PostProcess::HeatHaze;
-	if (KeyHit(Key_9))   gCurrentPostProcess = PostProcess::Copy;
-	if (KeyHit(Key_0))   gCurrentPostProcess = PostProcess::None;
+
+
+	//GAUSSIAN BLUR
+	if (gaussianBox == true)
+	{
+		if (gaussian == false)
+		{		
+			gCurrentPostProcess.push_back(PostProcess::GaussianVertical);
+			gCurrentPostProcess.push_back(PostProcess::GaussianHorizontal);
+			gaussian = true;
+		}
+	}
+	else
+	{
+		if (gaussian == true)
+		{
+			gaussian = false;
+			for (int i = 0; i < gCurrentPostProcess.size(); i++)
+			{
+				if (gCurrentPostProcess[i] == PostProcess::GaussianVertical)
+				{
+					gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
+					break;
+				}
+
+			}
+			for (int i = 0; i < gCurrentPostProcess.size(); i++)
+			{
+				if (gCurrentPostProcess[i] == PostProcess::GaussianHorizontal)
+				{
+					gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
+					break;
+				}
+			}
+		}
+	}
+	//if (KeyHit(Key_7))   gCurrentPostProcess = PostProcess::GreyNoise;
+	//if (KeyHit(Key_8))   gCurrentPostProcess = PostProcess::Burn;
+	//if (KeyHit(Key_4))   gCurrentPostProcess = PostProcess::Distort;
+	//if (KeyHit(Key_5))   gCurrentPostProcess = PostProcess::Spiral;
+	//if (KeyHit(Key_6))   gCurrentPostProcess = PostProcess::HeatHaze;
+	//if (KeyHit(Key_9))   gCurrentPostProcess = PostProcess::Copy;
+	//if (KeyHit(Key_0))   gCurrentPostProcess = PostProcess::None;
 
 	
 	if (KeyHeld(Key_L))

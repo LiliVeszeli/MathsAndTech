@@ -30,6 +30,24 @@
     <ClCompile Include="Math\CVector4.cpp">
       <Filter>Math</Filter>
     </ClCompile>
+    <ClCompile Include="External\imgui-master\imgui.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="External\imgui-master\imgui_demo.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="External\imgui-master\imgui_draw.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="External\imgui-master\imgui_widgets.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="External\imgui-master\examples\imgui_impl_dx11.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="External\imgui-master\examples\imgui_impl_win32.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h" />
@@ -80,6 +98,9 @@
     </Filter>
     <Filter Include="Post-Processing Shaders">
       <UniqueIdentifier>{54d6c200-aae4-4d0b-a802-911199a04f8b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="imgui">
+      <UniqueIdentifier>{743d1a02-48db-4782-8c96-2ab317549566}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
