@@ -129,6 +129,11 @@ bool distortBox = false;
 bool spiralBox = false;
 bool waterBox = false;
 
+int blurCount = 0;
+int gaussianCount = 0;
+
+
+
 
 //--------------------------------------------------------------------------------------
 // Constant Buffers
@@ -394,6 +399,9 @@ bool InitScene()
 	gCamera = new Camera();
 	gCamera->SetPosition({ 25, 18, -45 });
 	gCamera->SetRotation({ ToRadians(10.0f), ToRadians(7.0f), 0.0f });
+
+	gPostProcessingConstants.blurStrength = 3.5;
+	gPostProcessingConstants.gaussianStrength = 3.5;
 
 	return true;
 }
@@ -900,33 +908,87 @@ void RenderScene()
 
 	ImGui::Begin("Postprocess Control", 0, ImGuiWindowFlags_AlwaysAutoResize);
 	ImGui::Checkbox("Tint", &tintBox);	
-	ImGui::End();
-
-	ImGui::Begin("Postprocess Control", 0, ImGuiWindowFlags_AlwaysAutoResize);
+	
 	ImGui::Checkbox("Box Blur", &blurBox);
-	ImGui::End();
+	if (blurBox == true)
+	{
+		ImGui::SameLine();
+		if (ImGui::Button("-", ImVec2(20, 20)) == true)
+		{
+			if (blurCount >= 2)
+			{
+				for (int i = 0; i < gCurrentPostProcess.size(); i++)
+				{
+					if (gCurrentPostProcess[i] == PostProcess::Blur)
+					{
+						gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
+						blurCount--;
+						break;
+					}
+				}
+		    }
+		}
+		ImGui::SameLine();
+		std::string s = std::to_string(blurCount);
+		ImGui::Text(&s[0]);
+		ImGui::SameLine();
+		if (ImGui::Button("+", ImVec2(20, 20)) == true)
+		{
+			gCurrentPostProcess.push_back(PostProcess::Blur);
+			blurCount++;
+		}
 
-	ImGui::Begin("Postprocess Control", 0, ImGuiWindowFlags_AlwaysAutoResize);
+		ImGui::SliderFloat("stregth", &gPostProcessingConstants.blurStrength, 2, 8);
+	}
 	ImGui::Checkbox("Underwater", &waterBox);
-	ImGui::End();
 
-	ImGui::Begin("Postprocess Control", 0, ImGuiWindowFlags_AlwaysAutoResize);
-	ImGui::Checkbox("Gaussian Blur     ", &gaussianBox);
-	ImGui::End();
+	ImGui::Checkbox("Gaussian Blur", &gaussianBox);
+	if (gaussianBox == true)
+	{
+		ImGui::SameLine();
+		if (ImGui::Button("-", ImVec2(20, 20)) == true)
+		{
+			if (gaussianCount >= 2)
+			{
+				for (int i = 0; i < gCurrentPostProcess.size(); i++)
+				{
+					if (gCurrentPostProcess[i] == PostProcess::GaussianVertical)
+					{
+						gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
+						break;
+					}
 
-	ImGui::Begin("Postprocess Control", 0, ImGuiWindowFlags_AlwaysAutoResize);
+				}
+				for (int i = 0; i < gCurrentPostProcess.size(); i++)
+				{
+					if (gCurrentPostProcess[i] == PostProcess::GaussianHorizontal)
+					{
+						gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
+						break;
+					}
+				}
+				gaussianCount--;
+			}
+		}
+		ImGui::SameLine();
+		std::string s = std::to_string(gaussianCount);
+		ImGui::Text(&s[0]);
+		ImGui::SameLine();
+		if (ImGui::Button("+", ImVec2(20, 20)) == true)
+		{
+			gCurrentPostProcess.push_back(PostProcess::GaussianVertical);
+			gCurrentPostProcess.push_back(PostProcess::GaussianHorizontal);
+			gaussianCount++;
+		}
+		ImGui::SliderFloat("stregth", &gPostProcessingConstants.gaussianStrength, 2, 13);
+	}
+
 	ImGui::Checkbox("Grey Noise", &noiseBox);
-	ImGui::End();
 
-	ImGui::Begin("Postprocess Control", 0, ImGuiWindowFlags_AlwaysAutoResize);
 	ImGui::Checkbox("Spiral", &spiralBox);
-	ImGui::End();
 
-	ImGui::Begin("Postprocess Control", 0, ImGuiWindowFlags_AlwaysAutoResize);
 	ImGui::Checkbox("Distort", &distortBox);
-	ImGui::End();
 
-	ImGui::Begin("Postprocess Control", 0, ImGuiWindowFlags_AlwaysAutoResize);
 	ImGui::Checkbox("Burn", &burnBox);
 	ImGui::End();
 
@@ -990,18 +1052,23 @@ void UpdateScene(float frameTime)
 		{
 			gCurrentPostProcess.push_back(PostProcess::Blur);
 			blur = true;
+			blurCount++;
 		}
 	}
 	else
 	{
 		if (blur == true)
 		{
-			for (int i = 0; i < gCurrentPostProcess.size(); i++)
+			while (blurCount != 0)
 			{
-				if (gCurrentPostProcess[i] == PostProcess::Blur)
+				for (int i = 0; i < gCurrentPostProcess.size(); i++)
 				{
-					gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
-					break;
+					if (gCurrentPostProcess[i] == PostProcess::Blur)
+					{
+						gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
+						blurCount--;
+						break;
+					}
 				}
 			}
 			blur = false;
@@ -1042,6 +1109,7 @@ void UpdateScene(float frameTime)
 			gCurrentPostProcess.push_back(PostProcess::GaussianVertical);
 			gCurrentPostProcess.push_back(PostProcess::GaussianHorizontal);
 			gaussian = true;
+			gaussianCount++;
 		}
 	}
 	else
@@ -1049,18 +1117,47 @@ void UpdateScene(float frameTime)
 		if (gaussian == true)
 		{
 			gaussian = false;
-			for (int i = 0; i < gCurrentPostProcess.size(); i++)
+			while (gaussianCount != 0)
 			{
-				if (gCurrentPostProcess[i] == PostProcess::GaussianVertical)
+				for (int i = 0; i < gCurrentPostProcess.size(); i++)
 				{
-					gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
-					break;
-				}
+					if (gCurrentPostProcess[i] == PostProcess::GaussianVertical)
+					{
+						gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
+						break;
+					}
 
+				}
+				for (int i = 0; i < gCurrentPostProcess.size(); i++)
+				{
+					if (gCurrentPostProcess[i] == PostProcess::GaussianHorizontal)
+					{
+						gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
+						break;
+					}
+				}
+				gaussianCount--;
 			}
+		}
+	}
+
+	//GREY NOISE
+	if (noiseBox == true)
+	{
+		if (noise == false)
+		{
+			gCurrentPostProcess.push_back(PostProcess::GreyNoise);
+			noise = true;
+		}
+	}
+	else
+	{
+		if (noise == true)
+		{
+			noise = false;
 			for (int i = 0; i < gCurrentPostProcess.size(); i++)
 			{
-				if (gCurrentPostProcess[i] == PostProcess::GaussianHorizontal)
+				if (gCurrentPostProcess[i] == PostProcess::GreyNoise)
 				{
 					gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
 					break;
@@ -1068,10 +1165,80 @@ void UpdateScene(float frameTime)
 			}
 		}
 	}
-	//if (KeyHit(Key_7))   gCurrentPostProcess = PostProcess::GreyNoise;
-	//if (KeyHit(Key_8))   gCurrentPostProcess = PostProcess::Burn;
-	//if (KeyHit(Key_4))   gCurrentPostProcess = PostProcess::Distort;
-	//if (KeyHit(Key_5))   gCurrentPostProcess = PostProcess::Spiral;
+
+	//BURN
+	if (burnBox == true)
+	{
+		if (burn == false)
+		{
+			gCurrentPostProcess.push_back(PostProcess::Burn);
+			burn = true;
+		}
+	}
+	else
+	{
+		if (burn == true)
+		{
+			burn = false;
+			for (int i = 0; i < gCurrentPostProcess.size(); i++)
+			{
+				if (gCurrentPostProcess[i] == PostProcess::Burn)
+				{
+					gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
+					break;
+				}
+			}
+		}
+	}
+	//DISTORT
+	if (distortBox == true)
+	{
+		if (distort == false)
+		{
+			gCurrentPostProcess.push_back(PostProcess::Distort);
+			distort = true;
+		}
+	}
+	else
+	{
+		if (distort == true)
+		{
+			distort = false;
+			for (int i = 0; i < gCurrentPostProcess.size(); i++)
+			{
+				if (gCurrentPostProcess[i] == PostProcess::Distort)
+				{
+					gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
+					break;
+				}
+			}
+		}
+	}
+
+	//SPIRAL
+	if (spiralBox == true)
+	{
+		if (spiral == false)
+		{
+			gCurrentPostProcess.push_back(PostProcess::Spiral);
+			spiral = true;
+		}
+	}
+	else
+	{
+		if (spiral == true)
+		{
+			spiral = false;
+			for (int i = 0; i < gCurrentPostProcess.size(); i++)
+			{
+				if (gCurrentPostProcess[i] == PostProcess::Spiral)
+				{
+					gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
+					break;
+				}
+			}
+		}
+	}
 	//if (KeyHit(Key_6))   gCurrentPostProcess = PostProcess::HeatHaze;
 	//if (KeyHit(Key_9))   gCurrentPostProcess = PostProcess::Copy;
 	//if (KeyHit(Key_0))   gCurrentPostProcess = PostProcess::None;

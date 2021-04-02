@@ -154,10 +154,10 @@ cbuffer PostProcessingConstants : register(b1)
 	float3 paddingF;
     
     float3 gTintColour2;
-    float paddingG;
+    float gBlurStrength;
     
     float3 gTintColourWater;
-    float paddingH;
+    float gGaussianStrength;
     
     float gSWaterWiggle;
     float3 paddingI;

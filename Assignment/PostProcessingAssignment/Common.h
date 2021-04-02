@@ -144,10 +144,10 @@ struct PostProcessingConstants
 	CVector3 paddingF;
 
 	CVector3 tintColour2;
-	float paddingG;
+	float blurStrength;
 
 	CVector3 tintColourWater;
-	float paddingH;
+	float gaussianStrength;
 
 	float    waterWiggle;
 	CVector3 paddingI;

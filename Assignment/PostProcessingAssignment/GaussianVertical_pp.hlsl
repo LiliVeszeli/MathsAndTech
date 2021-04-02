@@ -33,8 +33,8 @@ float4 main(PostProcessingInput input) : SV_Target
     
     float3 colour = float3(0.0f, 0.0f, 0.0f);
     
-   // float offsetX = 1 / gViewportWidth * 4;
-    float offsetY = 1 / gViewportHeight * 3;
+
+    float offsetY = 1 / gViewportHeight * gGaussianStrength;
     
     colour += SceneTexture.Sample(PointSample, input.sceneUV + float2(0, -offsetY));
     colour += SceneTexture.Sample(PointSample, input.sceneUV + float2(0, 0));
@@ -42,8 +42,6 @@ float4 main(PostProcessingInput input) : SV_Target
     
     colour /= 3;
 	
-	// Sample a pixel from the scene texture and multiply it with the tint colour (comes from a constant buffer defined in Common.hlsli)
-   // float3 colour = SceneTexture.Sample(PointSample, input.sceneUV).rgb * gTintColourWater * 2.5;
 	
 	// Got the RGB from the scene texture, set alpha to 1 for final output
     return float4(colour, alpha);

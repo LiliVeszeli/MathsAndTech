@@ -77,8 +77,8 @@ float4 main(PostProcessingInput input) : SV_Target
     
     float3 colour = float3(0.0f, 0.0f, 0.0f);
     
-    float offsetX = 1 / gViewportWidth * 4;
-    float offsetY = 1 / gViewportHeight * 3;
+    float offsetX = 1 / gViewportWidth * gBlurStrength;
+    float offsetY = 1 / gViewportHeight * gBlurStrength;
 
     colour += SceneTexture.Sample(PointSample, input.sceneUV + float2(-offsetX, -offsetY));
     colour += SceneTexture.Sample(PointSample, input.sceneUV + float2(0, -offsetY));
