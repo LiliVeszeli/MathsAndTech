@@ -38,7 +38,9 @@ ID3D11PixelShader*  gBlurPostProcess       = nullptr;
 ID3D11PixelShader* gWaterPostProcess = nullptr;
 ID3D11PixelShader* gGaussianVerticalPostProcess = nullptr;
 ID3D11PixelShader* gGaussianHorizontalPostProcess = nullptr;
-
+ID3D11PixelShader* gPixelatedPostProcess = nullptr;
+ID3D11PixelShader* gNegativePostProcess = nullptr;
+ID3D11PixelShader* gPosterizationPostProcess = nullptr;
 
 
 //--------------------------------------------------------------------------------------
@@ -72,7 +74,12 @@ bool LoadShaders()
 	gWaterPostProcess      = LoadPixelShader ("Water_pp");
 	gGaussianVerticalPostProcess = LoadPixelShader("GaussianVertical_pp");
 	gGaussianHorizontalPostProcess = LoadPixelShader("GaussianHorizontal_pp");
+	gPixelatedPostProcess = LoadPixelShader("Pixelated_pp");
+	gNegativePostProcess = LoadPixelShader("Negative_pp");
+	gPosterizationPostProcess = LoadPixelShader("Posterization_pp");
 
+	
+	
 	if (gBasicTransformVertexShader == nullptr || gPixelLightingVertexShader == nullptr ||
 		gTintedTexturePixelShader   == nullptr || gPixelLightingPixelShader  == nullptr ||
 		g2DQuadVertexShader         == nullptr || gCopyPostProcess           == nullptr ||
@@ -80,7 +87,8 @@ bool LoadShaders()
 		gGreyNoisePostProcess       == nullptr || gBurnPostProcess           == nullptr ||
 		gDistortPostProcess         == nullptr || gSpiralPostProcess         == nullptr ||
 		g2DPolygonVertexShader      == nullptr || gBlurPostProcess == nullptr
-		|| gWaterPostProcess == nullptr || gGaussianVerticalPostProcess == nullptr || gGaussianHorizontalPostProcess == nullptr)
+		|| gWaterPostProcess == nullptr || gGaussianVerticalPostProcess == nullptr || gGaussianHorizontalPostProcess == nullptr
+		|| gPixelatedPostProcess == nullptr || gNegativePostProcess == nullptr || gPosterizationPostProcess == nullptr)
 	{
 		gLastError = "Error loading shaders";
 		return false;
@@ -107,8 +115,11 @@ void ReleaseShaders()
 	if (gBasicTransformVertexShader)  gBasicTransformVertexShader->Release();
 	if (gBlurPostProcess)             gBlurPostProcess->Release();
 	if (gWaterPostProcess)            gWaterPostProcess->Release();
+	if (gPixelatedPostProcess)        gPixelatedPostProcess->Release();
+	if (gNegativePostProcess)         gNegativePostProcess->Release();
+	if (gPosterizationPostProcess)    gPosterizationPostProcess->Release();
 	if (gGaussianVerticalPostProcess)             gGaussianVerticalPostProcess->Release();
-	if (gGaussianHorizontalPostProcess)             gGaussianHorizontalPostProcess->Release();
+	if (gGaussianHorizontalPostProcess)           gGaussianHorizontalPostProcess->Release();
 }
 
 

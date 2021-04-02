@@ -129,7 +129,9 @@ struct PostProcessingConstants
 
 	// Burn post-process settings
 	float    burnHeight;
-	CVector3 paddingC;
+	float    pixelSize;
+	float    numColours;
+	float paddingC;
 
 	// Distort post-process settings
 	float    distortLevel;

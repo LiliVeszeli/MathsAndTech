@@ -48,7 +48,10 @@ enum class PostProcess
 	Blur,
 	Water,
 	GaussianVertical,
-	GaussianHorizontal
+	GaussianHorizontal,
+	Pixelated, 
+	Negative,
+	Posterization
 };
 
 enum class PostProcessMode
@@ -119,6 +122,10 @@ bool burn = false;
 bool distort = false;
 bool spiral = false;
 bool water = false;
+bool pixel = false;
+bool negative = false;
+bool posterization = false;
+
 
 bool tintBox = false;
 bool blurBox = false;
@@ -128,6 +135,9 @@ bool burnBox = false;
 bool distortBox = false;
 bool spiralBox = false;
 bool waterBox = false;
+bool pixelBox = false;
+bool negativeBox = false;
+bool posterizationBox = false;
 
 int blurCount = 0;
 int gaussianCount = 0;
@@ -402,6 +412,8 @@ bool InitScene()
 
 	gPostProcessingConstants.blurStrength = 3.5;
 	gPostProcessingConstants.gaussianStrength = 3.5;
+	gPostProcessingConstants.pixelSize = 512;
+	gPostProcessingConstants.numColours = 7;
 
 	return true;
 }
@@ -586,6 +598,21 @@ void SelectPostProcessShaderAndTextures(PostProcess postProcess)
 	else if (postProcess == PostProcess::Water)
 	{
 		gD3DContext->PSSetShader(gWaterPostProcess, nullptr, 0);
+	}
+
+	else if (postProcess == PostProcess::Posterization)
+	{
+		gD3DContext->PSSetShader(gPosterizationPostProcess, nullptr, 0);
+	}
+
+	else if (postProcess == PostProcess::Negative)
+	{
+		gD3DContext->PSSetShader(gNegativePostProcess, nullptr, 0);
+	}
+
+	else if (postProcess == PostProcess::Pixelated)
+	{
+		gD3DContext->PSSetShader(gPixelatedPostProcess, nullptr, 0);
 	}
 
 	else if (postProcess == PostProcess::GreyNoise)
@@ -860,9 +887,6 @@ void RenderScene()
 			{
 				FullScreenPostProcess(gCurrentPostProcess[i], gPostProcessRenderTargets[(gCurrentPostProcessIndex + 1) % 2]);
 			}
-			//FullScreenPostProcess(gCurrentPostProcess, gPostProcessRenderTargets[(gCurrentPostProcessIndex + 1) % 2]);
-			//FullScreenPostProcess(PostProcess::GaussianVertical, gPostProcessRenderTargets[(gCurrentPostProcessIndex + 1) % 2]);
-			//FullScreenPostProcess(PostProcess::GaussianHorizontal, gPostProcessRenderTargets[(gCurrentPostProcessIndex + 1) % 2]);
 		}
 
 		else if (gCurrentPostProcessMode == PostProcessMode::Area)
@@ -879,12 +903,7 @@ void RenderScene()
 		{
 			// An array of four points in world space - a tapered square centred at the origin
 			std::array<CVector3, 4> points = {{ {0,5,0}, {-3,0,0}, {3,0,0} , {0,-5,0} }}; // C++ strangely needs an extra pair of {} here... only for std:array...
-		/*	if (!pointsG.empty())
-			{
-				points = pointsG;
-			}
-			else
-			pointsG = points;*/
+
 
 			// A rotating matrix placing the model above in the scene
 			static CMatrix4x4 polyMatrix = MatrixTranslation(pos);
@@ -906,7 +925,15 @@ void RenderScene()
 		gD3DContext->PSSetShaderResources(0, 1, &nullSRV);
 	}
 
+	//IMGUI controls
 	ImGui::Begin("Postprocess Control", 0, ImGuiWindowFlags_AlwaysAutoResize);
+	ImGui::Checkbox("Fullscreen", &tintBox);
+	ImGui::Checkbox("Area", &tintBox);
+	ImGui::Checkbox("Polygon", &tintBox);
+
+
+	ImGui::NewLine();
+
 	ImGui::Checkbox("Tint", &tintBox);	
 	
 	ImGui::Checkbox("Box Blur", &blurBox);
@@ -981,6 +1008,20 @@ void RenderScene()
 			gaussianCount++;
 		}
 		ImGui::SliderFloat("stregth", &gPostProcessingConstants.gaussianStrength, 2, 13);
+	}
+
+	ImGui::Checkbox("Pixelated", &pixelBox);
+	if (pixel == true)
+	{
+		ImGui::SliderFloat("size", &gPostProcessingConstants.pixelSize, 15, 1500);
+	}
+
+	ImGui::Checkbox("Negative", &negativeBox);
+
+	ImGui::Checkbox("Posterization", &posterizationBox);
+	if (posterization == true)
+	{
+		ImGui::SliderFloat("colours", &gPostProcessingConstants.numColours, 2, 40);
 	}
 
 	ImGui::Checkbox("Grey Noise", &noiseBox);
@@ -1099,7 +1140,80 @@ void UpdateScene(float frameTime)
 			}
 		}
 	}
+	
+    //Posterization
+	if (posterizationBox == true)
+	{
+		if (posterization == false)
+		{		
+			gCurrentPostProcess.push_back(PostProcess::Posterization);
+			posterization = true;
+		}
+	}
+	else
+	{
+		if (posterization == true)
+		{
+			posterization = false;
+			for (int i = 0; i < gCurrentPostProcess.size(); i++)
+			{
+				if (gCurrentPostProcess[i] == PostProcess::Posterization)
+				{
+					gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
+					break;
+				}
+			}
+		}
+	}
+	//PIXELATED
+	if (pixelBox == true)
+	{
+		if (pixel == false)
+		{
+			gCurrentPostProcess.push_back(PostProcess::Pixelated);
+			pixel = true;
+		}
+	}
+	else
+	{
+		if (pixel == true)
+		{
+			pixel = false;
+			for (int i = 0; i < gCurrentPostProcess.size(); i++)
+			{
+				if (gCurrentPostProcess[i] == PostProcess::Pixelated)
+				{
+					gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
+					break;
+				}
+			}
+		}
+	}
 
+	//NEGATIVE
+	if (negativeBox == true)
+	{
+		if (negative == false)
+		{
+			gCurrentPostProcess.push_back(PostProcess::Negative);
+			negative = true;
+		}
+	}
+	else
+	{
+		if (negative == true)
+		{
+			negative = false;
+			for (int i = 0; i < gCurrentPostProcess.size(); i++)
+			{
+				if (gCurrentPostProcess[i] == PostProcess::Negative)
+				{
+					gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
+					break;
+				}
+			}
+		}
+	}
 
 	//GAUSSIAN BLUR
 	if (gaussianBox == true)

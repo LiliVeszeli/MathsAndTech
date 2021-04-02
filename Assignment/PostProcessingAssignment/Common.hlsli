@@ -139,7 +139,9 @@ cbuffer PostProcessingConstants : register(b1)
 
 	// Burn post-process settings
 	float  gBurnHeight;
-	float3 paddingC;
+    float  gPixelSize;
+    float gNumColours;
+	float paddingC;
 
 	// Distort post-process settings
 	float  gDistortLevel;
