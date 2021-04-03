@@ -83,11 +83,13 @@ Mesh* gGroundMesh;
 Mesh* gCubeMesh;
 Mesh* gCrateMesh;
 Mesh* gLightMesh;
+Mesh* gWall1Mesh;
 
 Model* gStars;
 Model* gGround;
 Model* gCube;
 Model* gCrate;
+Model* gWall1;
 
 Camera* gCamera;
 
@@ -142,7 +144,9 @@ bool posterizationBox = false;
 int blurCount = 0;
 int gaussianCount = 0;
 
-
+bool area = false;
+bool fullscreen = false;
+bool polygon = false;
 
 
 //--------------------------------------------------------------------------------------
@@ -178,6 +182,9 @@ ID3D11Resource*           gCrateDiffuseSpecularMap = nullptr;
 ID3D11ShaderResourceView* gCrateDiffuseSpecularMapSRV = nullptr;
 ID3D11Resource*           gCubeDiffuseSpecularMap = nullptr;
 ID3D11ShaderResourceView* gCubeDiffuseSpecularMapSRV = nullptr;
+ID3D11Resource* gWall1DiffuseSpecularMap = nullptr;
+ID3D11ShaderResourceView* gWall1DiffuseSpecularMapSRV = nullptr;
+
 
 ID3D11Resource*           gLightDiffuseMap = nullptr;
 ID3D11ShaderResourceView* gLightDiffuseMapSRV = nullptr;
@@ -234,6 +241,7 @@ bool InitGeometry()
 		gCubeMesh   = new Mesh("Cube.x");
 		gCrateMesh  = new Mesh("CargoContainer.x");
 		gLightMesh  = new Mesh("Light.x");
+		gWall1Mesh = new Mesh("Wall1.x");
 	}
 	catch (std::runtime_error e)  // Constructors cannot return error messages so use exceptions to catch mesh errors (fairly standard approach this)
 	{
@@ -255,7 +263,8 @@ bool InitGeometry()
 		!LoadTexture("Flare.jpg",                &gLightDiffuseMap,          &gLightDiffuseMapSRV) ||
 		!LoadTexture("Noise.png",                &gNoiseMap,   &gNoiseMapSRV) ||
 		!LoadTexture("Burn.png",                 &gBurnMap,    &gBurnMapSRV) ||
-		!LoadTexture("Distort.png",              &gDistortMap, &gDistortMapSRV))
+		!LoadTexture("Distort.png",              &gDistortMap, &gDistortMapSRV) ||
+		!LoadTexture("brick_35.jpg", &gWall1DiffuseSpecularMap, &gWall1DiffuseSpecularMapSRV))
 	{
 		gLastError = "Error loading textures";
 		return false;
@@ -376,6 +385,7 @@ bool InitScene()
 	gGround = new Model(gGroundMesh);
 	gCube   = new Model(gCubeMesh);
 	gCrate  = new Model(gCrateMesh);
+	gWall1  = new Model(gWall1Mesh);
 
 	// Initial positions
 	gCube->SetPosition({ 42, 5, -10 });
@@ -385,7 +395,8 @@ bool InitScene()
 	gCrate->SetRotation({ 0.0f, ToRadians(40.0f), 0.0f });
 	gCrate->SetScale(6.0f);
 	gStars->SetScale(8000.0f);
-
+	gWall1->SetPosition({ 42, 0, -60 });
+	gWall1->SetScale(25.0f);
 
 	// Light set-up - using an array this time
 	for (int i = 0; i < NUM_LIGHTS; ++i)
@@ -407,7 +418,7 @@ bool InitScene()
 	////--------------- Set up camera ---------------////
 
 	gCamera = new Camera();
-	gCamera->SetPosition({ 25, 18, -45 });
+	gCamera->SetPosition({ 25, 18, -100 });
 	gCamera->SetRotation({ ToRadians(10.0f), ToRadians(7.0f), 0.0f });
 
 	gPostProcessingConstants.blurStrength = 3.5;
@@ -445,6 +456,8 @@ void ReleaseResources()
 	if (gCrateDiffuseSpecularMap)      gCrateDiffuseSpecularMap->Release();
 	if (gCubeDiffuseSpecularMapSRV)    gCubeDiffuseSpecularMapSRV->Release();
 	if (gCubeDiffuseSpecularMap)       gCubeDiffuseSpecularMap->Release();
+	if (gWall1DiffuseSpecularMapSRV)    gWall1DiffuseSpecularMapSRV->Release();
+	if (gWall1DiffuseSpecularMap)       gWall1DiffuseSpecularMap->Release();
 	if (gGroundDiffuseSpecularMapSRV)  gGroundDiffuseSpecularMapSRV->Release();
 	if (gGroundDiffuseSpecularMap)     gGroundDiffuseSpecularMap->Release();
 	if (gStarsDiffuseSpecularMapSRV)   gStarsDiffuseSpecularMapSRV->Release();
@@ -464,12 +477,14 @@ void ReleaseResources()
 	delete gCamera;  gCamera = nullptr;
 	delete gCrate;   gCrate = nullptr;
 	delete gCube;    gCube = nullptr;
+	delete gWall1;    gWall1 = nullptr;
 	delete gGround;  gGround = nullptr;
 	delete gStars;   gStars = nullptr;
-
+	
 	delete gLightMesh;   gLightMesh = nullptr;
 	delete gCrateMesh;   gCrateMesh = nullptr;
 	delete gCubeMesh;    gCubeMesh = nullptr;
+	delete gWall1Mesh;    gWall1Mesh = nullptr;
 	delete gGroundMesh;  gGroundMesh = nullptr;
 	delete gStarsMesh;   gStarsMesh = nullptr;
 }
@@ -522,7 +537,10 @@ void RenderSceneFromCamera(Camera* camera)
 	gD3DContext->PSSetShaderResources(0, 1, &gCubeDiffuseSpecularMapSRV); // First parameter must match texture slot number in the shader
 	gCube->Render();
 
+	gD3DContext->PSSetShaderResources(0, 1, &gWall1DiffuseSpecularMapSRV); // First parameter must match texture slot number in the shader
+	gWall1->Render();
 
+	
 	////--------------- Render sky ---------------////
 
 	// Select which shaders to use next
@@ -772,6 +790,7 @@ void AreaPostProcess(PostProcess postProcess, CVector3 worldPoint, CVector2 area
 
 	// Draw a quad
 	gD3DContext->Draw(4, 0);
+
 }
 
 
@@ -878,18 +897,12 @@ void RenderScene()
 
 	////--------------- Scene completion ---------------////
 
-	// Run any post-processing steps
-	if (!gCurrentPostProcess.empty())
-	{
-		if (gCurrentPostProcessMode == PostProcessMode::Fullscreen)
-		{
-			for (int i = 0; i < gCurrentPostProcess.size(); i++)
-			{
-				FullScreenPostProcess(gCurrentPostProcess[i], gPostProcessRenderTargets[(gCurrentPostProcessIndex + 1) % 2]);
-			}
-		}
+	
 
-		else if (gCurrentPostProcessMode == PostProcessMode::Area)
+	// Run any post-processing steps
+	if (!gCurrentPostProcess.empty() || polygon)
+	{
+		if (gCurrentPostProcessMode == PostProcessMode::Area)
 		{
 			for (int i = 0; i < gCurrentPostProcess.size(); i++)
 			{
@@ -899,11 +912,12 @@ void RenderScene()
 			
 		}
 
-		else if (gCurrentPostProcessMode == PostProcessMode::Polygon)
+		if (polygon == true)
 		{
+			//gCurrentPostProcessIndex = 0;
 			// An array of four points in world space - a tapered square centred at the origin
-			std::array<CVector3, 4> points = {{ {0,5,0}, {-3,0,0}, {3,0,0} , {0,-5,0} }}; // C++ strangely needs an extra pair of {} here... only for std:array...
-
+			std::array<CVector3, 4> points = { { {0,5,0}, {-3,0,0}, {3,0,0} , {0,-5,0} } }; // C++ strangely needs an extra pair of {} here... only for std:array...
+			std::array<CVector3, 4> points2 = { { {5,2,0},{-5,2,0},  {5,-10,0} , {-5,-10,0} } };
 
 			// A rotating matrix placing the model above in the scene
 			static CMatrix4x4 polyMatrix = MatrixTranslation(pos);
@@ -911,11 +925,24 @@ void RenderScene()
 			polyMatrix.e31 = pos.y;
 			polyMatrix.e32 = pos.z;
 			polyMatrix = MatrixRotationY(ToRadians(1)) * polyMatrix;
-		
+
+			static CMatrix4x4 polyMatrix2 = MatrixTranslation(CVector3{ 42, 10, -60 });
+
+			//for (int i = 0; i < gCurrentPostProcess.size(); i++)
+			//{
+			//	// Pass an array of 4 points and a matrix. Only supports 4 points.
+			//	PolygonPostProcess(gCurrentPostProcess[i], points, polyMatrix);
+			//	PolygonPostProcess(gCurrentPostProcess[i], points2, polyMatrix2);
+			//}
+
+			PolygonPostProcess(PostProcess::Negative, points2, polyMatrix2);
+		}
+
+		if (fullscreen == true)
+		{
 			for (int i = 0; i < gCurrentPostProcess.size(); i++)
 			{
-				// Pass an array of 4 points and a matrix. Only supports 4 points.
-				PolygonPostProcess(gCurrentPostProcess[i], points, polyMatrix);
+				FullScreenPostProcess(gCurrentPostProcess[i], gPostProcessRenderTargets[(gCurrentPostProcessIndex + 1) % 2]);
 			}
 		}
 
@@ -1056,9 +1083,9 @@ void UpdateScene(float frameTime)
 	
 
 	// Select post process on keys
-	if (KeyHit(Key_F1))  gCurrentPostProcessMode = PostProcessMode::Fullscreen;
+	if (KeyHit(Key_F1))  fullscreen = true;
 	if (KeyHit(Key_F2))  gCurrentPostProcessMode = PostProcessMode::Area;
-	if (KeyHit(Key_F3))  gCurrentPostProcessMode = PostProcessMode::Polygon;
+	if (KeyHit(Key_F3))  polygon = true;
 
 
 	//TINT
