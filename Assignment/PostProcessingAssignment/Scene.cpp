@@ -84,18 +84,20 @@ Mesh* gCubeMesh;
 Mesh* gCrateMesh;
 Mesh* gLightMesh;
 Mesh* gWall1Mesh;
+Mesh* gWall2Mesh;
 
 Model* gStars;
 Model* gGround;
 Model* gCube;
 Model* gCrate;
 Model* gWall1;
+Model* gWall2;
 
 Camera* gCamera;
 
 
 // Store lights in an array in this exercise
-const int NUM_LIGHTS = 2;
+const int NUM_LIGHTS = 3;
 struct Light
 {
 	Model*   model;
@@ -106,7 +108,7 @@ Light gLights[NUM_LIGHTS];
 
 
 // Additional light information
-CVector3 gAmbientColour = { 0.3f, 0.3f, 0.4f }; // Background level of light (slightly bluish to match the far background, which is dark blue)
+CVector3 gAmbientColour = { 0.5f, 0.5f, 0.6f }; // Background level of light (slightly bluish to match the far background, which is dark blue)
 float    gSpecularPower = 256; // Specular power controls shininess - same for all models in this app
 
 ColourRGBA gBackgroundColor = { 0.3f, 0.3f, 0.4f, 1.0f };
@@ -184,6 +186,8 @@ ID3D11Resource*           gCubeDiffuseSpecularMap = nullptr;
 ID3D11ShaderResourceView* gCubeDiffuseSpecularMapSRV = nullptr;
 ID3D11Resource* gWall1DiffuseSpecularMap = nullptr;
 ID3D11ShaderResourceView* gWall1DiffuseSpecularMapSRV = nullptr;
+ID3D11Resource* gWall2DiffuseSpecularMap = nullptr;
+ID3D11ShaderResourceView* gWall2DiffuseSpecularMapSRV = nullptr;
 
 
 ID3D11Resource*           gLightDiffuseMap = nullptr;
@@ -242,6 +246,7 @@ bool InitGeometry()
 		gCrateMesh  = new Mesh("CargoContainer.x");
 		gLightMesh  = new Mesh("Light.x");
 		gWall1Mesh = new Mesh("Wall1.x");
+		gWall2Mesh = new Mesh("Wall2.x");
 	}
 	catch (std::runtime_error e)  // Constructors cannot return error messages so use exceptions to catch mesh errors (fairly standard approach this)
 	{
@@ -258,13 +263,14 @@ bool InitGeometry()
 	// The function will fill in these pointers with usable data. The variables used here are globals found near the top of the file.
 	if (!LoadTexture("Stars.jpg",                &gStarsDiffuseSpecularMap,  &gStarsDiffuseSpecularMapSRV) ||
 		!LoadTexture("GrassDiffuseSpecular.dds", &gGroundDiffuseSpecularMap, &gGroundDiffuseSpecularMapSRV) ||
-		!LoadTexture("StoneDiffuseSpecular.dds", &gCubeDiffuseSpecularMap,   &gCubeDiffuseSpecularMapSRV) ||
+		!LoadTexture("holo.jpg"/*"StoneDiffuseSpecular.dds"*/, &gCubeDiffuseSpecularMap,   &gCubeDiffuseSpecularMapSRV) ||
 		!LoadTexture("CargoA.dds",               &gCrateDiffuseSpecularMap,  &gCrateDiffuseSpecularMapSRV) ||
 		!LoadTexture("Flare.jpg",                &gLightDiffuseMap,          &gLightDiffuseMapSRV) ||
 		!LoadTexture("Noise.png",                &gNoiseMap,   &gNoiseMapSRV) ||
 		!LoadTexture("Burn.png",                 &gBurnMap,    &gBurnMapSRV) ||
 		!LoadTexture("Distort.png",              &gDistortMap, &gDistortMapSRV) ||
-		!LoadTexture("brick_35.jpg", &gWall1DiffuseSpecularMap, &gWall1DiffuseSpecularMapSRV))
+		!LoadTexture("brick_35epsilon.jpg", &gWall1DiffuseSpecularMap, &gWall1DiffuseSpecularMapSRV) ||
+		!LoadTexture("brick_35epsilonzero2.jpg", &gWall2DiffuseSpecularMap, &gWall2DiffuseSpecularMapSRV))
 	{
 		gLastError = "Error loading textures";
 		return false;
@@ -386,17 +392,20 @@ bool InitScene()
 	gCube   = new Model(gCubeMesh);
 	gCrate  = new Model(gCrateMesh);
 	gWall1  = new Model(gWall1Mesh);
+	gWall2 = new Model(gWall2Mesh);
 
 	// Initial positions
-	gCube->SetPosition({ 42, 5, -10 });
-	gCube->SetRotation({ 0.0f, ToRadians(-110.0f), 0.0f });
+	gCube->SetPosition({ 12, 15, 20 });
+	gCube->SetRotation({ 0.0f, ToRadians(-30.0f),ToRadians(40.0f) });
 	gCube->SetScale(1.5f);
 	gCrate->SetPosition({ -10, 0, 90 });
 	gCrate->SetRotation({ 0.0f, ToRadians(40.0f), 0.0f });
 	gCrate->SetScale(6.0f);
 	gStars->SetScale(8000.0f);
-	gWall1->SetPosition({ 42, 0, -60 });
-	gWall1->SetScale(25.0f);
+	gWall1->SetPosition({ 62, 2, -40 });
+	gWall1->SetScale(28.0f);
+	gWall2->SetPosition({ 62, 0, -10 });
+	gWall2->SetScale(25.0f);
 
 	// Light set-up - using an array this time
 	for (int i = 0; i < NUM_LIGHTS; ++i)
@@ -406,13 +415,18 @@ bool InitScene()
 
 	gLights[0].colour = { 0.8f, 0.8f, 1.0f };
 	gLights[0].strength = 10;
-	gLights[0].model->SetPosition({ 30, 10, 0 });
+	gLights[0].model->SetPosition({ 65, 10, -15 });
 	gLights[0].model->SetScale(pow(gLights[0].strength, 1.0f)); // Convert light strength into a nice value for the scale of the light - equation is ad-hoc.
 
-	gLights[1].colour = { 1.0f, 0.8f, 0.2f };
-	gLights[1].strength = 40;
-	gLights[1].model->SetPosition({ -70, 30, 100 });
-	gLights[1].model->SetScale(pow(gLights[1].strength, 1.0f));
+	gLights[1].colour = { 0.5f, 0.0f, 1.0f };
+	gLights[1].strength = 30;
+	gLights[1].model->SetPosition({ -40, 30, 80 });
+	gLights[1].model->SetScale(50);
+
+	gLights[2].colour = { 0.1f, 0.3f, 0.5f };
+	gLights[2].strength = 30;
+	gLights[2].model->SetPosition({ 80, 20, -45 });
+	gLights[2].model->SetScale(pow(gLights[0].strength, 1.0f));
 
 
 	////--------------- Set up camera ---------------////
@@ -478,6 +492,7 @@ void ReleaseResources()
 	delete gCrate;   gCrate = nullptr;
 	delete gCube;    gCube = nullptr;
 	delete gWall1;    gWall1 = nullptr;
+	delete gWall2;    gWall2 = nullptr;
 	delete gGround;  gGround = nullptr;
 	delete gStars;   gStars = nullptr;
 	
@@ -485,6 +500,7 @@ void ReleaseResources()
 	delete gCrateMesh;   gCrateMesh = nullptr;
 	delete gCubeMesh;    gCubeMesh = nullptr;
 	delete gWall1Mesh;    gWall1Mesh = nullptr;
+	delete gWall2Mesh;    gWall2Mesh = nullptr;
 	delete gGroundMesh;  gGroundMesh = nullptr;
 	delete gStarsMesh;   gStarsMesh = nullptr;
 }
@@ -539,6 +555,9 @@ void RenderSceneFromCamera(Camera* camera)
 
 	gD3DContext->PSSetShaderResources(0, 1, &gWall1DiffuseSpecularMapSRV); // First parameter must match texture slot number in the shader
 	gWall1->Render();
+
+	gD3DContext->PSSetShaderResources(0, 1, &gWall2DiffuseSpecularMapSRV); // First parameter must match texture slot number in the shader
+	gWall2->Render();
 
 	
 	////--------------- Render sky ---------------////
@@ -790,7 +809,7 @@ void AreaPostProcess(PostProcess postProcess, CVector3 worldPoint, CVector2 area
 
 	// Draw a quad
 	gD3DContext->Draw(4, 0);
-
+	//gCurrentPostProcessIndex++;
 }
 
 
@@ -810,7 +829,7 @@ void PolygonPostProcess(PostProcess postProcess, const std::array<CVector3, 4>& 
 	SelectPostProcessShaderAndTextures(postProcess);
 
 
-	gD3DContext->OMSetBlendState(gAlphaBlendingState, nullptr, 0xffffff);
+	gD3DContext->OMSetBlendState(gNoBlendingState, nullptr, 0xffffff);
 	// Loop through the given points, transform each to 2D (this is what the vertex shader normally does in most labs)
 	for (unsigned int i = 0; i < points.size(); ++i)
 	{
@@ -829,6 +848,7 @@ void PolygonPostProcess(PostProcess postProcess, const std::array<CVector3, 4>& 
 	// Select the special 2D polygon post-processing vertex shader and draw the polygon
 	gD3DContext->VSSetShader(g2DPolygonVertexShader, nullptr, 0);
 	gD3DContext->Draw(4, 0);
+	//gCurrentPostProcessIndex++;
 }
 
 
@@ -854,6 +874,8 @@ void RenderScene()
 	gPerFrameConstants.light1Position = gLights[0].model->Position();
 	gPerFrameConstants.light2Colour   = gLights[1].colour * gLights[1].strength;
 	gPerFrameConstants.light2Position = gLights[1].model->Position();
+	gPerFrameConstants.light3Colour = gLights[2].colour * gLights[2].strength;
+	gPerFrameConstants.light3Position = gLights[2].model->Position();
 
 	gPerFrameConstants.ambientColour  = gAmbientColour;
 	gPerFrameConstants.specularPower  = gSpecularPower;
@@ -869,7 +891,7 @@ void RenderScene()
 	// Set the target for rendering and select the main depth buffer.
 	// If using post-processing then render to the scene texture, otherwise to the usual back buffer
 	// Also clear the render target to a fixed colour and the depth buffer to the far distance
-	if (!gCurrentPostProcess.empty() || polygon)
+	if (!gCurrentPostProcess.empty() || polygon || area)
 	{
 		gD3DContext->OMSetRenderTargets(1, &gSceneRenderTarget, gDepthStencil);
 		gD3DContext->ClearRenderTargetView(gSceneRenderTarget, &gBackgroundColor.r);
@@ -900,16 +922,19 @@ void RenderScene()
 	
 
 	// Run any post-processing steps
-	if (!gCurrentPostProcess.empty() || polygon)
+	if (!gCurrentPostProcess.empty() || polygon || area)
 	{
-		if (gCurrentPostProcessMode == PostProcessMode::Area)
+		if (area == true) //gCurrentPostProcessMode == PostProcessMode::Area)
 		{
-			for (int i = 0; i < gCurrentPostProcess.size(); i++)
-			{
-				// Pass a 3D point for the centre of the affected area and the size of the (rectangular) area in world units
-				AreaPostProcess(gCurrentPostProcess[i], gCube->Position(), { 22, 22 }, 15);
-			}
-			
+			//for (int i = 0; i < gCurrentPostProcess.size(); i++)
+			//{
+			//	// Pass a 3D point for the centre of the affected area and the size of the (rectangular) area in world units
+			//	//AreaPostProcess(gCurrentPostProcess[i], gCube->Position(), { 22, 22 }, 15);
+			//	
+			//}
+			CVector3 pos = gCube->Position();
+			pos.y += 2;
+			AreaPostProcess(PostProcess::Pixelated, pos, { 26, 27 }, 15);
 		}
 
 		if (polygon == true)
@@ -919,6 +944,11 @@ void RenderScene()
 			std::array<CVector3, 4> points = { { {0,5,0}, {-3,0,0}, {3,0,0} , {0,-5,0} } }; // C++ strangely needs an extra pair of {} here... only for std:array...
 			std::array<CVector3, 4> points2 = { { {5,2,0},{-5,2,0},  {5,-10,0} , {-5,-10,0} } };
 
+			std::array<CVector3, 4> pointsSpade = { { {-7.5f,2,0},{-14.5f,2,0},  {-7.5f,-10,0} , {-14.5f,-10,0} } };
+			std::array<CVector3, 4> pointsDiamond = { { {0,2,0},{-7,2,0},  {0,-10,0} , {-7,-10,0} } };
+			std::array<CVector3, 4> pointsClub = { { {8,2,0},{0,2,0},  {8,-10,0} , {0,-10,0} } };
+			std::array<CVector3, 4> pointsHeart = { { {15.0f,2,0},{7.9f,2,0},  {15.0f,-10,0} , {7.9f,-10,0} } };
+
 			// A rotating matrix placing the model above in the scene
 			static CMatrix4x4 polyMatrix = MatrixTranslation(pos);
 			polyMatrix.e30 = pos.x;
@@ -926,7 +956,12 @@ void RenderScene()
 			polyMatrix.e32 = pos.z;
 			polyMatrix = MatrixRotationY(ToRadians(1)) * polyMatrix;
 
-			static CMatrix4x4 polyMatrix2 = MatrixTranslation(CVector3{ 42, 10, -60 });
+			static CMatrix4x4 polyMatrix2 = MatrixTranslation(CVector3{ 62, 13, -40 });
+
+			static CMatrix4x4 polyMatrixSpade = MatrixTranslation(CVector3{ 62, 10, -10 });
+			static CMatrix4x4 polyMatrixDiamond = MatrixTranslation(CVector3{ 62, 10, -10 });
+			static CMatrix4x4 polyMatrixClub = MatrixTranslation(CVector3{ 62, 10, -10 });
+			static CMatrix4x4 polyMatrixHeart = MatrixTranslation(CVector3{ 62, 10, -10 });
 
 			//for (int i = 0; i < gCurrentPostProcess.size(); i++)
 			//{
@@ -936,6 +971,11 @@ void RenderScene()
 			//}
 
 			PolygonPostProcess(PostProcess::Negative, points2, polyMatrix2);
+
+			PolygonPostProcess(PostProcess::Distort, pointsSpade, polyMatrixSpade);
+			PolygonPostProcess(PostProcess::Tint, pointsDiamond, polyMatrixDiamond);
+			PolygonPostProcess(PostProcess::Pixelated, pointsClub, polyMatrixClub);
+			PolygonPostProcess(PostProcess::Water, pointsHeart, polyMatrixHeart);
 		}
 
 		if (fullscreen == true)
@@ -954,9 +994,9 @@ void RenderScene()
 
 	//IMGUI controls
 	ImGui::Begin("Postprocess Control", 0, ImGuiWindowFlags_AlwaysAutoResize);
-	ImGui::Checkbox("Fullscreen", &tintBox);
-	ImGui::Checkbox("Area", &tintBox);
-	ImGui::Checkbox("Polygon", &tintBox);
+	ImGui::Checkbox("Fullscreen", &fullscreen);
+	ImGui::Checkbox("Area", &area);
+	ImGui::Checkbox("Polygon", &polygon);
 
 
 	ImGui::NewLine();
@@ -1084,7 +1124,7 @@ void UpdateScene(float frameTime)
 
 	// Select post process on keys
 	if (KeyHit(Key_F1))  fullscreen = true;
-	if (KeyHit(Key_F2))  gCurrentPostProcessMode = PostProcessMode::Area;
+	if (KeyHit(Key_F2))  area = true;//gCurrentPostProcessMode = PostProcessMode::Area;
 	if (KeyHit(Key_F3))  polygon = true;
 
 
@@ -1408,7 +1448,7 @@ void UpdateScene(float frameTime)
 	gPostProcessingConstants.tintColour = { 0.6f, 0, 0.5f };
 	gPostProcessingConstants.tintColour2 = { 0, 0, 1.0f };
 
-	gPostProcessingConstants.tintColourWater = { 0, 0.35f, 0.7f };
+	gPostProcessingConstants.tintColourWater = { 0, 0.75f, 0.7f };
 	gPostProcessingConstants.frameTime += frameTime;
 
 	// Noise scaling adjusts how fine the grey noise is.
@@ -1442,10 +1482,13 @@ void UpdateScene(float frameTime)
 	// Orbit one light - a bit of a cheat with the static variable [ask the tutor if you want to know what this is]
 	static float lightRotate = 0.0f;
 	static bool go = true;
-	gLights[0].model->SetPosition({ 20 + cos(lightRotate) * gLightOrbitRadius, 10, 20 + sin(lightRotate) * gLightOrbitRadius });
+	gLights[0].model->SetPosition({ 50 + cos(lightRotate) * gLightOrbitRadius, 10, 35 + sin(lightRotate) * gLightOrbitRadius });
 	if (go)  lightRotate -= gLightOrbitSpeed * frameTime;
 	if (KeyHit(Key_L))  go = !go;
 
+	static float cubeRotate = 0.0f;
+	gCube->SetRotation({ 0.0f, ToRadians(-30.0f + cubeRotate),ToRadians(40.0f) });
+	cubeRotate += frameTime *8;
 	// Control of camera
 	gCamera->Control(frameTime, Key_Up, Key_Down, Key_Left, Key_Right, Key_W, Key_S, Key_A, Key_D);
 

@@ -75,6 +75,11 @@ struct PerFrameConstants
     CVector3   light2Colour;
     float      padding2;
 
+	CVector3   light3Position;
+	float      padding4;
+	CVector3   light3Colour;
+	float      padding5;
+
     CVector3   ambientColour;
     float      specularPower;
 

@@ -88,6 +88,11 @@ cbuffer PerFrameConstants : register(b0) // The b0 gives this constant buffer th
     float3   gLight2Colour;
     float    padding2;
 
+    float3 gLight3Position;
+    float padding4;
+    float3 gLight3Colour;
+    float padding5;
+    
     float3   gAmbientColour;
     float    gSpecularPower;
 
