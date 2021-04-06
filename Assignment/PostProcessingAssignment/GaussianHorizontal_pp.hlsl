@@ -15,7 +15,6 @@ Texture2D SceneTexture : register(t0);
 SamplerState PointSample : register(s0); // We don't usually want to filter (bilinear, trilinear etc.) the scene texture when
                                           // post-processing so this sampler will use "point sampling" - no filtering
 
-
 //--------------------------------------------------------------------------------------
 // Shader code
 //--------------------------------------------------------------------------------------
@@ -24,6 +23,7 @@ SamplerState PointSample : register(s0); // We don't usually want to filter (bil
 float4 main(PostProcessingInput input) : SV_Target
 {
 
+    float weight[5] = {0.227027f, 0.1945946f, 0.1216216f, 0.054054f, 0.016216f};
 	// Calculate alpha to display the effect in a softened circle, could use a texture rather than calculations for the same task.
 	// Uses the second set of area texture coordinates, which range from (0,0) to (1,1) over the area being processed
     float softEdge = 0.20f; // Softness of the edge of the circle - range 0.001 (hard edge) to 0.25 (very soft)
@@ -33,17 +33,20 @@ float4 main(PostProcessingInput input) : SV_Target
     
     float3 colour = float3(0.0f, 0.0f, 0.0f);
     
-    float offsetX = 1 / gViewportWidth * gGaussianStrength;
-    
-    colour += SceneTexture.Sample(PointSample, input.sceneUV + float2(0, -offsetX));
-    colour += SceneTexture.Sample(PointSample, input.sceneUV + float2(0, 0));
-    colour += SceneTexture.Sample(PointSample, input.sceneUV + float2(0, +offsetX));
+    float offsetX = 1 / gViewportWidth* gGaussianStrength;
+    colour += SceneTexture.Sample(PointSample, input.sceneUV) * weight[0];
     
     
-    colour /= 3;
+    for (int i = 1; i < 5; ++i)
+    {
+        colour += SceneTexture.Sample(PointSample, input.sceneUV - float2(offsetX * i, 0))* weight[i];
+        colour += SceneTexture.Sample(PointSample, input.sceneUV + float2(offsetX * i, 0))* weight[i];
+    }
+    //colour += SceneTexture.Sample(PointSample, input.sceneUV - float2(offsetX, 0));
+    //colour += SceneTexture.Sample(PointSample, input.sceneUV + float2(offsetX, 0));
+    //
+    //colour /= 3;
 	
-	// Sample a pixel from the scene texture and multiply it with the tint colour (comes from a constant buffer defined in Common.hlsli)
-    //float3 colour = SceneTexture.Sample(PointSample, input.sceneUV).rgb * gTintColourWater * 2.5;
 	
 	// Got the RGB from the scene texture, set alpha to 1 for final output
     return float4(colour, alpha);
