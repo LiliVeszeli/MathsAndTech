@@ -40,7 +40,8 @@ extern ID3D11PixelShader* gPixelatedPostProcess;
 extern ID3D11PixelShader* gNegativePostProcess;
 extern ID3D11PixelShader* gPosterizationPostProcess;
 extern ID3D11PixelShader* gChromaticAberrationPostProcess;
-
+extern ID3D11PixelShader* gEdgePostProcess;
+extern ID3D11PixelShader* gNeonPostProcess;
 
 
 //--------------------------------------------------------------------------------------

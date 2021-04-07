@@ -53,6 +53,8 @@ enum class PostProcess
 	Negative,
 	Posterization,
 	ChromaticAberration,
+	Edge,
+	Neon
 };
 
 enum class PostProcessMode
@@ -131,6 +133,8 @@ bool pixel = false;
 bool negative = false;
 bool posterization = false;
 bool chromatic = false;
+bool edge = false;
+bool neon = false;
 
 
 
@@ -146,6 +150,8 @@ bool pixelBox = false;
 bool negativeBox = false;
 bool posterizationBox = false;
 bool chromaticBox = false;
+bool edgeBox = false;
+bool neonBox = false;
 
 int blurCount = 0;
 int gaussianCount = 0;
@@ -641,9 +647,21 @@ void SelectPostProcessShaderAndTextures(PostProcess postProcess)
 		gD3DContext->PSSetShader(gWaterPostProcess, nullptr, 0);
 	}
 
+	else if (postProcess == PostProcess::Neon)
+	{
+		gD3DContext->PSSetShader(gNeonPostProcess, nullptr, 0);
+	}
+
+
 	else if (postProcess == PostProcess::ChromaticAberration)
 	{
 		gD3DContext->PSSetShader(gChromaticAberrationPostProcess, nullptr, 0);
+	}
+
+
+	else if (postProcess == PostProcess::Edge)
+	{
+		gD3DContext->PSSetShader(gEdgePostProcess, nullptr, 0);
 	}
 
 	
@@ -945,6 +963,7 @@ void RenderScene()
 			CVector3 pos = gCube->Position();
 			pos.y += 2;
 			AreaPostProcess(PostProcess::Pixelated, pos, { 26, 27 }, 15);
+			AreaPostProcess(PostProcess::Neon, pos, { 26, 27 }, 15);
 		}
 
 		if (polygon == true)
@@ -1102,6 +1121,10 @@ void RenderScene()
 	}
 
 	ImGui::Checkbox("Chromatic Aberration", &chromaticBox);
+
+	ImGui::Checkbox("Edge Detection", &edgeBox);
+
+	ImGui::Checkbox("Neon", &neonBox);
 	
 	ImGui::Checkbox("Grey Noise", &noiseBox);
 
@@ -1270,7 +1293,57 @@ void UpdateScene(float frameTime)
 		}
 	}
 
-	
+	//EDGE
+	if (edgeBox == true)
+	{
+		if (edge == false)
+		{
+			gCurrentPostProcess.push_back(PostProcess::Edge);
+			edge = true;
+		}
+	}
+	else
+	{
+		if (edge == true)
+		{
+			edge = false;
+			for (int i = 0; i < gCurrentPostProcess.size(); i++)
+			{
+				if (gCurrentPostProcess[i] == PostProcess::Edge)
+				{
+					gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
+					break;
+				}
+			}
+		}
+	}
+
+	//NEON
+	if (neonBox == true)
+	{
+		if (neon == false)
+		{
+			gCurrentPostProcess.push_back(PostProcess::Neon);
+			neon = true;
+		}
+	}
+	else
+	{
+		if (neon == true)
+		{
+			neon = false;
+			for (int i = 0; i < gCurrentPostProcess.size(); i++)
+			{
+				if (gCurrentPostProcess[i] == PostProcess::Neon)
+				{
+					gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
+					break;
+				}
+			}
+		}
+	}
+
+
 	//PIXELATED
 	if (pixelBox == true)
 	{

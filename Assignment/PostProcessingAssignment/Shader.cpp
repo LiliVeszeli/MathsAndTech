@@ -42,6 +42,8 @@ ID3D11PixelShader* gPixelatedPostProcess = nullptr;
 ID3D11PixelShader* gNegativePostProcess = nullptr;
 ID3D11PixelShader* gPosterizationPostProcess = nullptr;
 ID3D11PixelShader* gChromaticAberrationPostProcess = nullptr;
+ID3D11PixelShader* gEdgePostProcess = nullptr;
+ID3D11PixelShader* gNeonPostProcess = nullptr;
 
 
 //--------------------------------------------------------------------------------------
@@ -79,6 +81,8 @@ bool LoadShaders()
 	gNegativePostProcess = LoadPixelShader("Negative_pp");
 	gPosterizationPostProcess = LoadPixelShader("Posterization_pp");
 	gChromaticAberrationPostProcess = LoadPixelShader("ChromaticAberration_pp");
+	gEdgePostProcess = LoadPixelShader("Edge_pp");
+	gNeonPostProcess = LoadPixelShader("Neon_pp");
 
 	
 	
@@ -91,7 +95,7 @@ bool LoadShaders()
 		g2DPolygonVertexShader      == nullptr || gBlurPostProcess == nullptr
 		|| gWaterPostProcess == nullptr || gGaussianVerticalPostProcess == nullptr || gGaussianHorizontalPostProcess == nullptr
 		|| gPixelatedPostProcess == nullptr || gNegativePostProcess == nullptr || gPosterizationPostProcess == nullptr ||
-		gChromaticAberrationPostProcess == nullptr)
+		gChromaticAberrationPostProcess == nullptr || gEdgePostProcess == nullptr || gNeonPostProcess == nullptr)
 	{
 		gLastError = "Error loading shaders";
 		return false;
@@ -121,6 +125,8 @@ void ReleaseShaders()
 	if (gPixelatedPostProcess)        gPixelatedPostProcess->Release();
 	if (gNegativePostProcess)         gNegativePostProcess->Release();
 	if (gPosterizationPostProcess)    gPosterizationPostProcess->Release();
+	if (gEdgePostProcess)         gEdgePostProcess->Release();
+	if (gNeonPostProcess)         gNeonPostProcess->Release();
 	if (gChromaticAberrationPostProcess)         gChromaticAberrationPostProcess->Release();
 	if (gGaussianVerticalPostProcess)             gGaussianVerticalPostProcess->Release();
 	if (gGaussianHorizontalPostProcess)           gGaussianHorizontalPostProcess->Release();
