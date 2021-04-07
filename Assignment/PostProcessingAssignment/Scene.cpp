@@ -54,7 +54,11 @@ enum class PostProcess
 	Posterization,
 	ChromaticAberration,
 	Edge,
-	Neon
+	Neon,
+	Bloom,
+	BloomSampler,
+	Paint,
+	Frost
 };
 
 enum class PostProcessMode
@@ -135,6 +139,9 @@ bool posterization = false;
 bool chromatic = false;
 bool edge = false;
 bool neon = false;
+bool bloom = false;
+bool paint = false;
+bool frost = false;
 
 
 
@@ -152,6 +159,9 @@ bool posterizationBox = false;
 bool chromaticBox = false;
 bool edgeBox = false;
 bool neonBox = false;
+bool bloomBox = false;
+bool paintBox = false;
+bool frostBox = false;
 
 int blurCount = 0;
 int gaussianCount = 0;
@@ -159,6 +169,9 @@ int gaussianCount = 0;
 bool area = false;
 bool fullscreen = true;
 bool polygon = true;
+
+
+float pix[2];
 
 
 //--------------------------------------------------------------------------------------
@@ -222,6 +235,11 @@ ID3D11Texture2D* gPostProcessTextures[2];
 ID3D11RenderTargetView* gPostProcessRenderTargets[2];
 ID3D11ShaderResourceView* gPostProcessTextureSRVs[2];
 
+ID3D11Texture2D* gBloomTexture = nullptr; // This object represents the memory used by the texture on the GPU
+ID3D11RenderTargetView* gBloomRenderTarget = nullptr; // This object is used when we want to render to the texture above
+ID3D11ShaderResourceView* gBloomTextureSRV = nullptr; // This object is used to give shaders access to the texture above (SRV = shader resource view)
+
+
 int gCurrentPostProcessIndex;
 
 // Additional textures used for specific post-processes
@@ -232,6 +250,9 @@ ID3D11ShaderResourceView* gBurnMapSRV = nullptr;
 ID3D11Resource*           gDistortMap = nullptr;
 ID3D11ShaderResourceView* gDistortMapSRV = nullptr;
 
+
+ID3D11Resource* gFrostMap = nullptr;
+ID3D11ShaderResourceView* gFrostMapSRV = nullptr;
 
 //****************************
 
@@ -278,6 +299,7 @@ bool InitGeometry()
 		!LoadTexture("Flare.jpg",                &gLightDiffuseMap,          &gLightDiffuseMapSRV) ||
 		!LoadTexture("Noise.png",                &gNoiseMap,   &gNoiseMapSRV) ||
 		!LoadTexture("Burn.png",                 &gBurnMap,    &gBurnMapSRV) ||
+		!LoadTexture("Frost.jpg",                &gFrostMap, &gFrostMapSRV) ||
 		!LoadTexture("Distort.png",              &gDistortMap, &gDistortMapSRV) ||
 		!LoadTexture("brick_35epsilon.jpg", &gWall1DiffuseSpecularMap, &gWall1DiffuseSpecularMapSRV) ||
 		!LoadTexture("brick_35epsilonzero2.jpg", &gWall2DiffuseSpecularMap, &gWall2DiffuseSpecularMapSRV))
@@ -348,6 +370,11 @@ bool InitGeometry()
 		gLastError = "Error creating scene texture";
 		return false;
 	}
+	if (FAILED(gD3DDevice->CreateTexture2D(&sceneTextureDesc, NULL, &gBloomTexture)))
+	{
+		gLastError = "Error creating scene texture";
+		return false;
+	}
 	gPostProcessTextures[0] = gSceneTexture;
 	gPostProcessTextures[1] = gSceneTexture2;
 
@@ -360,6 +387,11 @@ bool InitGeometry()
 		return false;
 	}
 	if (FAILED(gD3DDevice->CreateRenderTargetView(gSceneTexture2, NULL, &gSceneRenderTarget2)))
+	{
+		gLastError = "Error creating scene render target view";
+		return false;
+	}
+	if (FAILED(gD3DDevice->CreateRenderTargetView(gBloomTexture, NULL, &gBloomRenderTarget)))
 	{
 		gLastError = "Error creating scene render target view";
 		return false;
@@ -379,6 +411,11 @@ bool InitGeometry()
 		return false;
 	}
 	if (FAILED(gD3DDevice->CreateShaderResourceView(gSceneTexture2, &srDesc, &gSceneTextureSRV2)))
+	{
+		gLastError = "Error creating scene shader resource view";
+		return false;
+	}
+	if (FAILED(gD3DDevice->CreateShaderResourceView(gBloomTexture, &srDesc, &gBloomTextureSRV)))
 	{
 		gLastError = "Error creating scene shader resource view";
 		return false;
@@ -446,9 +483,17 @@ bool InitScene()
 	gCamera->SetRotation({ ToRadians(10.0f), ToRadians(7.0f), 0.0f });
 
 	gPostProcessingConstants.blurStrength = 3.5;
-	gPostProcessingConstants.gaussianStrength = 3.5;
+	gPostProcessingConstants.gaussianStrength = 2;
 	gPostProcessingConstants.pixelSize = 512;
 	gPostProcessingConstants.numColours = 7;
+	gPostProcessingConstants.threshold = 0.4f;
+	gPostProcessingConstants.radius = 5;
+	gPostProcessingConstants.freq = 0.115;
+
+	gPostProcessingConstants.pixX = 2;
+	gPostProcessingConstants.pixY = 2;
+	pix[0] = gPostProcessingConstants.pixX;
+	pix[1] = gPostProcessingConstants.pixY;
 
 	return true;
 }
@@ -467,10 +512,16 @@ void ReleaseResources()
 	if (gSceneRenderTarget2)            gSceneRenderTarget2->Release();
 	if (gSceneTexture2)                 gSceneTexture2->Release();
 
+	if (gBloomTextureSRV)              gBloomTextureSRV->Release();
+	if (gBloomRenderTarget)            gBloomRenderTarget->Release();
+	if (gBloomTexture)                 gBloomTexture->Release();
+
 	if (gDistortMapSRV)                gDistortMapSRV->Release();
 	if (gDistortMap)                   gDistortMap->Release();
 	if (gBurnMapSRV)                   gBurnMapSRV->Release();
 	if (gBurnMap)                      gBurnMap->Release();
+	if (gFrostMapSRV)                  gFrostMapSRV->Release();
+	if (gFrostMap)                     gFrostMap->Release();
 	if (gNoiseMapSRV)                  gNoiseMapSRV->Release();
 	if (gNoiseMap)                     gNoiseMap->Release();
 
@@ -647,6 +698,18 @@ void SelectPostProcessShaderAndTextures(PostProcess postProcess)
 		gD3DContext->PSSetShader(gWaterPostProcess, nullptr, 0);
 	}
 
+	else if (postProcess == PostProcess::Paint)
+	{
+		gD3DContext->PSSetShader(gPaintPostProcess, nullptr, 0);
+	}
+
+	else if (postProcess == PostProcess::Frost)
+	{
+		gD3DContext->PSSetShader(gFrostPostProcess, nullptr, 0);
+		gD3DContext->PSSetShaderResources(1, 1, &gFrostMapSRV);
+		gD3DContext->PSSetSamplers(1, 1, &gTrilinearSampler);
+	}
+
 	else if (postProcess == PostProcess::Neon)
 	{
 		gD3DContext->PSSetShader(gNeonPostProcess, nullptr, 0);
@@ -689,6 +752,22 @@ void SelectPostProcessShaderAndTextures(PostProcess postProcess)
 		gD3DContext->PSSetSamplers(1, 1, &gTrilinearSampler);
 	}
 
+	else if (postProcess == PostProcess::BloomSampler)
+	{
+		gD3DContext->PSSetShader(gBloomSamplerPostProcess, nullptr, 0);
+
+		// Give pixel shader access to the noise texture
+		//gD3DContext->PSSetShaderResources(1, 1, &gBloomTextureSRV);
+	}
+
+	else if (postProcess == PostProcess::Bloom)
+	{
+		gD3DContext->PSSetShader(gBloomPostProcess, nullptr, 0);
+
+		// Give pixel shader access to the noise texture
+		gD3DContext->PSSetShaderResources(1, 1, &gBloomTextureSRV);
+	}
+
 	else if (postProcess == PostProcess::Burn)
 	{
 		gD3DContext->PSSetShader(gBurnPostProcess, nullptr, 0);
@@ -727,6 +806,8 @@ void FullScreenPostProcess(PostProcess postProcess, ID3D11RenderTargetView* rend
 	//gD3DContext->OMSetRenderTargets(1, &gBackBufferRenderTarget, gDepthStencil);
 
 	gD3DContext->OMSetRenderTargets(1, &renderTarget, gDepthStencil);
+
+	
 
 	
 	// Give the pixel shader (post-processing shader) access to the scene texture 
@@ -944,6 +1025,12 @@ void RenderScene()
 	// Render the scene from the main camera
 	RenderSceneFromCamera(gCamera);
 
+	
+
+	/*gD3DContext->OMSetRenderTargets(1, &gBloomRenderTarget, gDepthStencil);
+	gD3DContext->ClearRenderTargetView(gBloomRenderTarget, &gBackgroundColor.r);
+
+	RenderSceneFromCamera(gCamera);*/
 
 	////--------------- Scene completion ---------------////
 
@@ -961,9 +1048,9 @@ void RenderScene()
 			//	
 			//}
 			CVector3 pos = gCube->Position();
-			pos.y += 2;
-			AreaPostProcess(PostProcess::Pixelated, pos, { 26, 27 }, 15);
-			AreaPostProcess(PostProcess::Neon, pos, { 26, 27 }, 15);
+			//pos.y += 2;
+			AreaPostProcess(PostProcess::Pixelated, pos, { 32, 30 }, 15);
+			AreaPostProcess(PostProcess::Neon, pos, { 32, 30 }, 15);
 		}
 
 		if (polygon == true)
@@ -1009,9 +1096,17 @@ void RenderScene()
 
 		if (fullscreen == true)
 		{
+			/*FullScreenPostProcess(PostProcess::Copy, gBloomRenderTarget);
+			gCurrentPostProcessIndex--;*/
+			
 			for (int i = 0; i < gCurrentPostProcess.size(); i++)
-			{
-				FullScreenPostProcess(gCurrentPostProcess[i], gPostProcessRenderTargets[(gCurrentPostProcessIndex + 1) % 2]);
+			{	
+				if (gCurrentPostProcess[i] == PostProcess::BloomSampler)
+				{
+					FullScreenPostProcess(PostProcess::Copy, gBloomRenderTarget);
+					gCurrentPostProcessIndex--;
+				}
+			    FullScreenPostProcess(gCurrentPostProcess[i], gPostProcessRenderTargets[(gCurrentPostProcessIndex + 1) % 2]);			
 			}
 		}
 
@@ -1103,7 +1198,7 @@ void RenderScene()
 			gCurrentPostProcess.push_back(PostProcess::GaussianHorizontal);
 			gaussianCount++;
 		}
-		ImGui::SliderFloat("stregth", &gPostProcessingConstants.gaussianStrength, 2, 4);
+		ImGui::SliderFloat("stregth", &gPostProcessingConstants.gaussianStrength, 1.1, 4);
 	}
 
 	ImGui::Checkbox("Pixelated", &pixelBox);
@@ -1125,6 +1220,28 @@ void RenderScene()
 	ImGui::Checkbox("Edge Detection", &edgeBox);
 
 	ImGui::Checkbox("Neon", &neonBox);
+
+	ImGui::Checkbox("Paint", &paintBox);
+	if (paint == true)
+	{
+		ImGui::SliderFloat("Radius", &gPostProcessingConstants.radius, 0, 10);
+	}
+
+	
+
+	ImGui::Checkbox("Frost", &frostBox);
+	if (frost == true)
+	{
+		ImGui::SliderFloat("Frequency", &gPostProcessingConstants.freq, 0.025, 0.8);
+		ImGui::SliderFloat2("Pixel", pix, 0, 50);
+	}
+
+
+	ImGui::Checkbox("Bloom", &bloomBox);
+	if (bloom == true)
+	{
+		ImGui::SliderFloat("Threshold", &gPostProcessingConstants.threshold, 0.1, 1.0);
+	}
 	
 	ImGui::Checkbox("Grey Noise", &noiseBox);
 
@@ -1242,7 +1359,58 @@ void UpdateScene(float frameTime)
 			}
 		}
 	}
+
+	//PAINT
+	if (paintBox == true)
+	{
+		if (paint == false)
+		{
+			gCurrentPostProcess.push_back(PostProcess::Paint);
+			paint = true;
+		}
+	}
+	else
+	{
+		if (paint == true)
+		{
+			paint = false;
+			for (int i = 0; i < gCurrentPostProcess.size(); i++)
+			{
+				if (gCurrentPostProcess[i] == PostProcess::Paint)
+				{
+					gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
+					break;
+				}
+			}
+		}
+	}
 	
+
+	//FROST
+	if (frostBox == true)
+	{
+		if (frost == false)
+		{
+			gCurrentPostProcess.push_back(PostProcess::Frost);
+			frost = true;
+		}
+	}
+	else
+	{
+		if (frost == true)
+		{
+			frost = false;
+			for (int i = 0; i < gCurrentPostProcess.size(); i++)
+			{
+				if (gCurrentPostProcess[i] == PostProcess::Frost)
+				{
+					gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
+					break;
+				}
+			}
+		}
+	}
+
     //Posterization
 	if (posterizationBox == true)
 	{
@@ -1431,6 +1599,69 @@ void UpdateScene(float frameTime)
 				}
 				gaussianCount--;
 			}
+		}
+	}
+
+
+
+	//BLOOM
+	if (bloomBox == true)
+	{
+		if (bloom == false)
+		{
+			gCurrentPostProcess.push_back(PostProcess::BloomSampler);
+			gCurrentPostProcess.push_back(PostProcess::GaussianVertical);
+			gCurrentPostProcess.push_back(PostProcess::GaussianHorizontal);
+			gCurrentPostProcess.push_back(PostProcess::Bloom);
+			bloom = true;
+			//gaussianCount++;
+		}
+	}
+	else
+	{
+		if (bloom == true)
+		{
+			bloom = false;
+			//while (gaussianCount != 0)
+			//{
+				for (int i = 0; i < gCurrentPostProcess.size(); i++)
+				{
+					if (gCurrentPostProcess[i] == PostProcess::GaussianVertical)
+					{
+						gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
+						break;
+					}
+
+				}
+				for (int i = 0; i < gCurrentPostProcess.size(); i++)
+				{
+					if (gCurrentPostProcess[i] == PostProcess::GaussianHorizontal)
+					{
+						gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
+						break;
+					}
+				}
+
+
+				for (int i = 0; i < gCurrentPostProcess.size(); i++)
+				{
+					if (gCurrentPostProcess[i] == PostProcess::Bloom)
+					{
+						gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
+						break;
+					}
+				}
+
+				for (int i = 0; i < gCurrentPostProcess.size(); i++)
+				{
+					if (gCurrentPostProcess[i] == PostProcess::BloomSampler)
+					{
+						gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
+						break;
+					}
+				}
+				//gaussianCount--;
+			//}
 		}
 	}
 

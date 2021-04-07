@@ -27,20 +27,6 @@ float3 sobel(float2 uv)
     float y = 0;
     float2 texelSize = float2(1 / gViewportWidth, 1 / gViewportHeight);
 
-    //float3 colour = float3(0.0f, 0.0f, 0.0f);
-	
-    //float e11 = SceneTexture.Sample(PointSample, ppIn.UV + float2(-PixelX, -PixelY));
-    //float e12 = SceneTexture.Sample(PointSample, ppIn.UV + float2(0, -PixelY));
-    //float e13 = SceneTexture.Sample(PointSample, ppIn.UV + float2(+PixelX, -PixelY));
-              
-    //float e21 = SceneTexture.Sample(PointSample, ppIn.UV + float2(-PixelX, 0));
-    //float e22 = SceneTexture.Sample(PointSample, ppIn.UV + float2(0, 0));
-    //float e23 = SceneTexture.Sample(PointSample, ppIn.UV + float2(+PixelX, 0));
-                
-    //float e31 = SceneTexture.Sample(PointSample, ppIn.UV + float2(-PixelX, +PixelY));
-    //float e32 = SceneTexture.Sample(PointSample, ppIn.UV + float2(0, +PixelY));
-    //float e33 = SceneTexture.Sample(PointSample, ppIn.UV + float2(+PixelX, +PixelY));
-
     x += SceneTexture.Sample(PointSample, uv  + float2(-texelSize.x, -texelSize.y)) * -1.0;
     x += SceneTexture.Sample(PointSample, uv  + float2(-texelSize.x, 0)) * -2.0;
     x += SceneTexture.Sample(PointSample, uv  + float2(-texelSize.x, texelSize.y)) * -1.0;

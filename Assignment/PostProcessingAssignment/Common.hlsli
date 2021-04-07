@@ -146,15 +146,18 @@ cbuffer PostProcessingConstants : register(b1)
 	float  gBurnHeight;
     float  gPixelSize;
     float gNumColours;
-	float paddingC;
+    float gThreshold;
 
 	// Distort post-process settings
 	float  gDistortLevel;
-	float3 paddingD;
+    float gRadius;
+	float2 paddingD;
 
 	// Spiral post-process settings
 	float  gSpiralLevel;
-	float3 paddingE;
+    float gfreq;
+    float gpixX;
+    float gpixY;
 
 	// Heat haze post-process settings
 	float  gHeatHazeTimer;

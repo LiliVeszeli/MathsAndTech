@@ -136,15 +136,18 @@ struct PostProcessingConstants
 	float    burnHeight;
 	float    pixelSize;
 	float    numColours;
-	float paddingC;
+	float    threshold;
 
 	// Distort post-process settings
 	float    distortLevel;
-	CVector3 paddingD;
+	float    radius;
+	CVector2 paddingD;
 
 	// Spiral post-process settings
 	float    spiralLevel;
-	CVector3 paddingE;
+	float    freq;
+	float    pixX;
+	float    pixY;
 
 	// Heat haze post-process settings
 	float    heatHazeTimer;

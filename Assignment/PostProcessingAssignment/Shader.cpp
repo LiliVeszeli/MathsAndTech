@@ -44,7 +44,11 @@ ID3D11PixelShader* gPosterizationPostProcess = nullptr;
 ID3D11PixelShader* gChromaticAberrationPostProcess = nullptr;
 ID3D11PixelShader* gEdgePostProcess = nullptr;
 ID3D11PixelShader* gNeonPostProcess = nullptr;
-
+ID3D11PixelShader* gBloomPostProcess = nullptr;
+ID3D11PixelShader* gBloomSamplerPostProcess = nullptr;
+ID3D11PixelShader* gPaintPostProcess = nullptr;
+ID3D11PixelShader* gFrostPostProcess = nullptr;
+					
 
 //--------------------------------------------------------------------------------------
 // Shader creation / destruction
@@ -83,6 +87,10 @@ bool LoadShaders()
 	gChromaticAberrationPostProcess = LoadPixelShader("ChromaticAberration_pp");
 	gEdgePostProcess = LoadPixelShader("Edge_pp");
 	gNeonPostProcess = LoadPixelShader("Neon_pp");
+	gBloomPostProcess = LoadPixelShader("Bloom_pp");
+	gBloomSamplerPostProcess = LoadPixelShader("BloomSampler_pp");
+	gPaintPostProcess = LoadPixelShader("Paint_pp");
+	gFrostPostProcess = LoadPixelShader("Frost_pp");
 
 	
 	
@@ -95,7 +103,9 @@ bool LoadShaders()
 		g2DPolygonVertexShader      == nullptr || gBlurPostProcess == nullptr
 		|| gWaterPostProcess == nullptr || gGaussianVerticalPostProcess == nullptr || gGaussianHorizontalPostProcess == nullptr
 		|| gPixelatedPostProcess == nullptr || gNegativePostProcess == nullptr || gPosterizationPostProcess == nullptr ||
-		gChromaticAberrationPostProcess == nullptr || gEdgePostProcess == nullptr || gNeonPostProcess == nullptr)
+		gChromaticAberrationPostProcess == nullptr || gEdgePostProcess == nullptr || gNeonPostProcess == nullptr
+		|| gBloomPostProcess == nullptr || gBloomSamplerPostProcess == nullptr || gPaintPostProcess == nullptr
+		|| gFrostPostProcess == nullptr)
 	{
 		gLastError = "Error loading shaders";
 		return false;
@@ -127,6 +137,10 @@ void ReleaseShaders()
 	if (gPosterizationPostProcess)    gPosterizationPostProcess->Release();
 	if (gEdgePostProcess)         gEdgePostProcess->Release();
 	if (gNeonPostProcess)         gNeonPostProcess->Release();
+	if (gBloomPostProcess)         gBloomPostProcess->Release();
+	if (gPaintPostProcess)         gPaintPostProcess->Release();
+	if (gFrostPostProcess)         gFrostPostProcess->Release();
+	if (gBloomSamplerPostProcess)         gBloomSamplerPostProcess->Release();
 	if (gChromaticAberrationPostProcess)         gChromaticAberrationPostProcess->Release();
 	if (gGaussianVerticalPostProcess)             gGaussianVerticalPostProcess->Release();
 	if (gGaussianHorizontalPostProcess)           gGaussianHorizontalPostProcess->Release();
