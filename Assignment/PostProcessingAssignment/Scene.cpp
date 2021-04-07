@@ -51,7 +51,8 @@ enum class PostProcess
 	GaussianHorizontal,
 	Pixelated, 
 	Negative,
-	Posterization
+	Posterization,
+	ChromaticAberration,
 };
 
 enum class PostProcessMode
@@ -129,6 +130,8 @@ bool water = false;
 bool pixel = false;
 bool negative = false;
 bool posterization = false;
+bool chromatic = false;
+
 
 
 bool tintBox = false;
@@ -142,13 +145,14 @@ bool waterBox = false;
 bool pixelBox = false;
 bool negativeBox = false;
 bool posterizationBox = false;
+bool chromaticBox = false;
 
 int blurCount = 0;
 int gaussianCount = 0;
 
 bool area = false;
-bool fullscreen = false;
-bool polygon = false;
+bool fullscreen = true;
+bool polygon = true;
 
 
 //--------------------------------------------------------------------------------------
@@ -637,6 +641,12 @@ void SelectPostProcessShaderAndTextures(PostProcess postProcess)
 		gD3DContext->PSSetShader(gWaterPostProcess, nullptr, 0);
 	}
 
+	else if (postProcess == PostProcess::ChromaticAberration)
+	{
+		gD3DContext->PSSetShader(gChromaticAberrationPostProcess, nullptr, 0);
+	}
+
+	
 	else if (postProcess == PostProcess::Posterization)
 	{
 		gD3DContext->PSSetShader(gPosterizationPostProcess, nullptr, 0);
@@ -1074,13 +1084,13 @@ void RenderScene()
 			gCurrentPostProcess.push_back(PostProcess::GaussianHorizontal);
 			gaussianCount++;
 		}
-		ImGui::SliderFloat("stregth", &gPostProcessingConstants.gaussianStrength, 2, 13);
+		ImGui::SliderFloat("stregth", &gPostProcessingConstants.gaussianStrength, 2, 4);
 	}
 
 	ImGui::Checkbox("Pixelated", &pixelBox);
 	if (pixel == true)
 	{
-		ImGui::SliderFloat("size", &gPostProcessingConstants.pixelSize, 15, 1500);
+		ImGui::SliderFloat("size", &gPostProcessingConstants.pixelSize, 15, 2000);
 	}
 
 	ImGui::Checkbox("Negative", &negativeBox);
@@ -1088,9 +1098,11 @@ void RenderScene()
 	ImGui::Checkbox("Posterization", &posterizationBox);
 	if (posterization == true)
 	{
-		ImGui::SliderFloat("colours", &gPostProcessingConstants.numColours, 2, 40);
+		ImGui::SliderFloat("", &gPostProcessingConstants.numColours, 2, 35);
 	}
 
+	ImGui::Checkbox("Chromatic Aberration", &chromaticBox);
+	
 	ImGui::Checkbox("Grey Noise", &noiseBox);
 
 	ImGui::Checkbox("Spiral", &spiralBox);
@@ -1232,6 +1244,33 @@ void UpdateScene(float frameTime)
 			}
 		}
 	}
+
+	//ChromaticAberration	
+	if (chromaticBox == true)
+	{
+		if (chromatic == false)
+		{
+			gCurrentPostProcess.push_back(PostProcess::ChromaticAberration);
+			chromatic = true;
+		}
+	}
+	else
+	{
+		if (chromatic == true)
+		{
+			chromatic = false;
+			for (int i = 0; i < gCurrentPostProcess.size(); i++)
+			{
+				if (gCurrentPostProcess[i] == PostProcess::ChromaticAberration)
+				{
+					gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
+					break;
+				}
+			}
+		}
+	}
+
+	
 	//PIXELATED
 	if (pixelBox == true)
 	{

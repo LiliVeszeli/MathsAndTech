@@ -13,7 +13,9 @@
 // The scene has been rendered to a texture, these variables allow access to that texture
 Texture2D SceneTexture : register(t0);
 SamplerState PointSample : register(s0); // We don't usually want to filter (bilinear, trilinear etc.) the scene texture when
-                                          // post-processing so this sampler will use "point sampling" - no filtering
+
+
+// post-processing so this sampler will use "point sampling" - no filtering
 
 //--------------------------------------------------------------------------------------
 // Shader code
@@ -24,6 +26,52 @@ float4 main(PostProcessingInput input) : SV_Target
 {
 
     float weight[5] = {0.227027f, 0.1945946f, 0.1216216f, 0.054054f, 0.016216f};
+    
+    float filter[7] = { 0.030078323, 0.104983664, 0.222250419, 0.285375187, 0.222250419, 0.104983664, 0.030078323 };
+    
+    float BlurWeights[13] =
+    {
+        0.002216,
+   0.008764,
+   0.026995,
+   0.064759,
+   0.120985,
+   0.176033,
+   0.199471,
+   0.176033,
+   0.120985,
+   0.064759,
+   0.026995,
+   0.008764,
+   0.002216,
+    };
+    
+    float weights[21] =
+    {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0.000003,
+    0.000229,
+    0.005977,
+    0.060598,
+    0.24173,
+    0.382925,
+    0.24173,
+    0.060598,
+    0.005977,
+    0.000229,
+    0.000003,
+    0,
+    0,
+    0,
+    0,
+    0,
+ };
+    
+    
 	// Calculate alpha to display the effect in a softened circle, could use a texture rather than calculations for the same task.
 	// Uses the second set of area texture coordinates, which range from (0,0) to (1,1) over the area being processed
     float softEdge = 0.20f; // Softness of the edge of the circle - range 0.001 (hard edge) to 0.25 (very soft)
@@ -39,8 +87,8 @@ float4 main(PostProcessingInput input) : SV_Target
     
     for (int i = 1; i < 5; ++i)
     {
-        colour += SceneTexture.Sample(PointSample, input.sceneUV - float2(offsetX * i, 0))* weight[i];
-        colour += SceneTexture.Sample(PointSample, input.sceneUV + float2(offsetX * i, 0))* weight[i];
+        colour += SceneTexture.Sample(PointSample, input.sceneUV - float2(offsetX * i, 0)) * weight[i];
+        colour += SceneTexture.Sample(PointSample, input.sceneUV + float2(offsetX * i, 0)) * weight[i];
     }
     //colour += SceneTexture.Sample(PointSample, input.sceneUV - float2(offsetX, 0));
     //colour += SceneTexture.Sample(PointSample, input.sceneUV + float2(offsetX, 0));
