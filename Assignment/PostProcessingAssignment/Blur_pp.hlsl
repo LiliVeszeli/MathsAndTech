@@ -49,6 +49,12 @@ float4 main(PostProcessingInput input) : SV_Target
     
     //tex.a = alpha;
     
-    return float4(colour, alpha);
-    
+    //if (gisMotionBlur == true)
+    //{
+    return gisMotionBlur ? float4(colour, 0.1f) : float4(colour, 1.0f);
+    //}
+    //else
+    //{
+    //    return float4(colour, 1.0f);
+    //}  
 }

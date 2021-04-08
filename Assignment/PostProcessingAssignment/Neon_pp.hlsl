@@ -98,6 +98,8 @@ float4 main(PostProcessingInput input) : SV_Target
     hsvTex.z = 1.0; // Modify lightness/value.
     float3 colour = hsv2rgb(hsvTex);
 
-    return float4(colour * s, alpha);
-    
+    if (gisArea)
+        return float4(colour * s, alpha);
+    else
+        return float4(colour * s, 1.0f);
 }

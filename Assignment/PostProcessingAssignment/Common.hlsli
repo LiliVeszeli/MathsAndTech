@@ -171,6 +171,12 @@ cbuffer PostProcessingConstants : register(b1)
     
     float gSWaterWiggle;
     float3 paddingI;
+    
+    bool gisArea;
+    bool gisMotionBlur;
+    bool paddingK;
+    bool paddingL;
+    //float3 paddingM;
 }
 
 //**************************

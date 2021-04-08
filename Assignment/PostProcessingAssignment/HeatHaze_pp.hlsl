@@ -46,5 +46,5 @@ float4 main(PostProcessingInput input) : SV_Target
 	// Adjust alpha on a sine wave - because it's better to have it nearer to 1.0 (but don't allow it to exceed 1.0)
     alpha *= saturate(SinX * SinY * 0.33f + 0.66f);
 
-	return float4(colour, alpha);
+	return float4(colour, 1.0f);
 }

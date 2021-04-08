@@ -143,7 +143,7 @@ float4 main(PostProcessingInput input) : SV_Target
     //    tc = SceneTexture.Sample(PointSample, uv).rgb;
     //}
   
-        return float4(tc, alpha);
+    return float4(tc, 1.0f);
 
     
     //float DeltaX = (PixelX / gViewportWidth);

@@ -58,5 +58,5 @@ float4 main(PostProcessingInput input) : SV_Target
     colour *= gTintColourWater * 1.5;
 	
 	// Got the RGB from the scene texture, set alpha to 1 for final output
-    return float4(colour, alpha);
+    return float4(colour, 1.0f);
 }

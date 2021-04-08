@@ -44,59 +44,9 @@ float4 main(PostProcessingInput input) : SV_Target
    0.002216,
     };
     
-    float weights[21] =
-    {
-        0,
-    0,
-    0,
-    0,
-    0,
-    0.000003,
-    0.000229,
-    0.005977,
-    0.060598,
-    0.24173,
-    0.382925,
-    0.24173,
-    0.060598,
-    0.005977,
-    0.000229,
-    0.000003,
-    0,
-    0,
-    0,
-    0,
-    0,
-    };
-    //0.00296902
-    //0.0133062
-    //0.0219382
-    //0.0133062
-    //0.00296902
+    float offset[18] = { 0.0, 1.4953705027, 3.4891992113, 5.4830312105, 7.4768683759, 9.4707125766, 11.4645656736, 13.4584295168, 15.4523059431, 17.4461967743, 19.4661974725, 21.4627427973, 23.4592916956, 25.455844494, 27.4524015179, 29.4489630909, 31.445529535, 33.4421011704 };
+    float weights[18] = { 0.033245, 0.0659162217, 0.0636705814, 0.0598194658, 0.0546642566, 0.0485871646, 0.0420045997, 0.0353207015, 0.0288880982, 0.0229808311, 0.0177815511, 0.013382297, 0.0097960001, 0.0069746748, 0.0048301008, 0.0032534598, 0.0021315311, 0.0013582974 };
 
-    //0.0133062
-    //0.0596343
-    //0.0983203
-    //0.0596343
-    //0.0133062
-
-    //0.0219382
-    //0.0983203
-    //0.162103
-    //0.0983203
-    //0.0219382
-
-    //0.0133062
-    //0.0596343
-    //0.0983203
-    //0.0596343
-    //0.0133062
-
-    //0.00296902
-    //0.0133062
-    //0.0219382
-    //0.0133062
-    //0.00296902
     
 	// Calculate alpha to display the effect in a softened circle, could use a texture rather than calculations for the same task.
 	// Uses the second set of area texture coordinates, which range from (0,0) to (1,1) over the area being processed
@@ -119,6 +69,12 @@ float4 main(PostProcessingInput input) : SV_Target
         colour += SceneTexture.Sample(PointSample, input.sceneUV + float2(0, offsetY * i)) * weight[i];
     }
     
+    //for (int i = 1; i < 18; ++i)
+    //{
+    //    colour += SceneTexture.Sample(PointSample, input.sceneUV - float2(0, offset[i])) * weights[i];
+    //    colour += SceneTexture.Sample(PointSample, input.sceneUV + float2(0, offset[i])) * weights[i];
+    //}
+    
     //colour += SceneTexture.Sample(PointSample, input.sceneUV - float2(0, offsetY));
     //colour += SceneTexture.Sample(PointSample, input.sceneUV + float2(0, offsetY));
      
@@ -127,5 +83,5 @@ float4 main(PostProcessingInput input) : SV_Target
 	
 	
 	// Got the RGB from the scene texture, set alpha to 1 for final output
-    return float4(colour, alpha);
+    return float4(colour, 1.0f);
 }

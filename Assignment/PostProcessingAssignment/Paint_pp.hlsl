@@ -163,7 +163,7 @@ float4 main(PostProcessingInput input) : SV_Target
         }
     }
     
-    return float4(color, alpha);
+    return float4(color, 1.0f);
     
 }
 

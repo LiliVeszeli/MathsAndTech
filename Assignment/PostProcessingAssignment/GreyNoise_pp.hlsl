@@ -46,5 +46,5 @@ float4 main(PostProcessingInput input) : SV_Target
 	float alpha = 1.0f - saturate((centreLengthSq - 0.25f + softEdge) / softEdge); // Soft circle calculation based on fact that this circle has a radius of 0.5 (as area UVs go from 0->1)
 																					   
 	// Output final colour
-	return float4(grey, grey, grey, alpha);
+	return float4(grey, grey, grey, 1.0f);
 }

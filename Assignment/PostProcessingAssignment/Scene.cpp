@@ -70,7 +70,8 @@ enum class PostProcessMode
 
 //auto gCurrentPostProcess     = PostProcess::None; //make it a vector
 std::vector<PostProcess> gCurrentPostProcess{};
-//gCurrentPostProcess.push_back();
+std::vector<PostProcess> gCurrentPostProcessPoly{};
+
 auto gCurrentPostProcessMode = PostProcessMode::Fullscreen;
 
 //********************
@@ -124,7 +125,7 @@ ColourRGBA gBackgroundColor = { 0.3f, 0.3f, 0.4f, 1.0f };
 const float gLightOrbitRadius = 20.0f;
 const float gLightOrbitSpeed = 0.7f;
 
-
+//fullscreen
 bool tint = false;
 bool blur = false;
 bool gaussian = false;
@@ -143,8 +144,26 @@ bool bloom = false;
 bool paint = false;
 bool frost = false;
 
+//polygon
+bool polytint = false;
+bool polyblur = false;
+bool polygaussian = false;
+bool polynoise = false;
+bool polyburn = false;
+bool polydistort = false;
+bool polyspiral = false;
+bool polywater = false;
+bool polypixel = false;
+bool polynegative = false;
+bool polyposterization = false;
+bool polychromatic = false;
+bool polyedge = false;
+bool polyneon = false;
+bool polybloom = false;
+bool polypaint = false;
+bool polyfrost = false;
 
-
+//imGUI tickbox fullscreen
 bool tintBox = false;
 bool blurBox = false;
 bool gaussianBox = false;
@@ -163,6 +182,25 @@ bool bloomBox = false;
 bool paintBox = false;
 bool frostBox = false;
 
+//imGUI tickbox polygon
+bool polytintBox = false;
+bool polyblurBox = false;
+bool polygaussianBox = false;
+bool polynoiseBox = false;
+bool polyburnBox = false;
+bool polydistortBox = false;
+bool polyspiralBox = false;
+bool polywaterBox = false;
+bool polypixelBox = false;
+bool polynegativeBox = false;
+bool polyposterizationBox = false;
+bool polychromaticBox = false;
+bool polyedgeBox = false;
+bool polyneonBox = false;
+bool polybloomBox = false;
+bool polypaintBox = false;
+bool polyfrostBox = false;
+
 int blurCount = 0;
 int gaussianCount = 0;
 
@@ -170,7 +208,7 @@ bool area = false;
 bool fullscreen = true;
 bool polygon = true;
 
-
+bool motionBlur = false;
 float pix[2];
 
 
@@ -494,6 +532,9 @@ bool InitScene()
 	gPostProcessingConstants.pixY = 2;
 	pix[0] = gPostProcessingConstants.pixX;
 	pix[1] = gPostProcessingConstants.pixY;
+
+	gPostProcessingConstants.isArea = false;
+	gPostProcessingConstants.isMotionBlur = false;
 
 	return true;
 }
@@ -822,7 +863,7 @@ void FullScreenPostProcess(PostProcess postProcess, ID3D11RenderTargetView* rend
 
 
 	// States - no blending, don't write to depth buffer and ignore back-face culling
-	gD3DContext->OMSetBlendState(gNoBlendingState, nullptr, 0xffffff);
+	gD3DContext->OMSetBlendState(gAlphaBlendingState, nullptr, 0xffffff);
 	gD3DContext->OMSetDepthStencilState(gDepthReadOnlyState, 0);
 	gD3DContext->RSSetState(gCullNoneState);
 
@@ -1049,8 +1090,10 @@ void RenderScene()
 			//}
 			CVector3 pos = gCube->Position();
 			//pos.y += 2;
+			gPostProcessingConstants.isArea = true;
 			AreaPostProcess(PostProcess::Pixelated, pos, { 32, 30 }, 15);
 			AreaPostProcess(PostProcess::Neon, pos, { 32, 30 }, 15);
+			gPostProcessingConstants.isArea = false;
 		}
 
 		if (polygon == true)
@@ -1079,19 +1122,19 @@ void RenderScene()
 			static CMatrix4x4 polyMatrixClub = MatrixTranslation(CVector3{ 62, 10, -10 });
 			static CMatrix4x4 polyMatrixHeart = MatrixTranslation(CVector3{ 62, 10, -10 });
 
-			//for (int i = 0; i < gCurrentPostProcess.size(); i++)
-			//{
-			//	// Pass an array of 4 points and a matrix. Only supports 4 points.
-			//	PolygonPostProcess(gCurrentPostProcess[i], points, polyMatrix);
-			//	PolygonPostProcess(gCurrentPostProcess[i], points2, polyMatrix2);
-			//}
 
-			PolygonPostProcess(PostProcess::Negative, points2, polyMatrix2);
+			PolygonPostProcess(PostProcess::Copy, points2, polyMatrix2);
 
 			PolygonPostProcess(PostProcess::Distort, pointsSpade, polyMatrixSpade);
 			PolygonPostProcess(PostProcess::Tint, pointsDiamond, polyMatrixDiamond);
 			PolygonPostProcess(PostProcess::Pixelated, pointsClub, polyMatrixClub);
 			PolygonPostProcess(PostProcess::Water, pointsHeart, polyMatrixHeart);
+
+			for (int i = 0; i < gCurrentPostProcessPoly.size(); i++)
+			{
+				// Pass an array of 4 points and a matrix. Only supports 4 points.		
+				PolygonPostProcess(gCurrentPostProcessPoly[i], points2, polyMatrix2);
+			}
 		}
 
 		if (fullscreen == true)
@@ -1117,48 +1160,74 @@ void RenderScene()
 	}
 
 	//IMGUI controls
-	ImGui::Begin("Postprocess Control", 0, ImGuiWindowFlags_AlwaysAutoResize);
-	ImGui::Checkbox("Fullscreen", &fullscreen);
+	ImGui::Begin("Postprocess Switch", 0, ImGuiWindowFlags_AlwaysAutoResize);
+	ImGui::Checkbox("Fullscreen        ", &fullscreen);
 	ImGui::Checkbox("Area", &area);
 	ImGui::Checkbox("Polygon", &polygon);
+	ImGui::End();
 
-
-	ImGui::NewLine();
-
-	ImGui::Checkbox("Tint", &tintBox);	
+	//ImGui::NewLine();
+	ImGui::Begin("Fullscreen Postprocess", 0, ImGuiWindowFlags_AlwaysAutoResize);
+	//Tint
+	//ImGui::Text("Tint");
+	//ImGui::Checkbox("Fullscreen", &tintBox);	
+	//ImGui::Checkbox("Polygon", &polytintBox);
+	ImGui::Checkbox("Tint", &tintBox);
 	
+
+
+	//Blur
 	ImGui::Checkbox("Box Blur", &blurBox);
+	//ImGui::Text("Box Blur");
+	//ImGui::Checkbox("Fullscreen ", &blurBox);
+	
 	if (blurBox == true)
 	{
-		ImGui::SameLine();
-		if (ImGui::Button("-", ImVec2(20, 20)) == true)
+		if (motionBlur == false)
 		{
-			if (blurCount >= 2)
+		
+			ImGui::SameLine();
+			if (ImGui::Button("-", ImVec2(20, 20)) == true)
 			{
-				for (int i = 0; i < gCurrentPostProcess.size(); i++)
+				if (blurCount >= 2)
 				{
-					if (gCurrentPostProcess[i] == PostProcess::Blur)
+					for (int i = 0; i < gCurrentPostProcess.size(); i++)
 					{
-						gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
-						blurCount--;
-						break;
+						if (gCurrentPostProcess[i] == PostProcess::Blur)
+						{
+							gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
+							blurCount--;
+							break;
+						}
 					}
 				}
-		    }
-		}
-		ImGui::SameLine();
-		std::string s = std::to_string(blurCount);
-		ImGui::Text(&s[0]);
-		ImGui::SameLine();
-		if (ImGui::Button("+", ImVec2(20, 20)) == true)
-		{
-			gCurrentPostProcess.push_back(PostProcess::Blur);
-			blurCount++;
-		}
+			}
+			ImGui::SameLine();
+			std::string s = std::to_string(blurCount);
+			ImGui::Text(&s[0]);
+			ImGui::SameLine();
+			if (ImGui::Button("+", ImVec2(20, 20)) == true)
+			{
+				gCurrentPostProcess.push_back(PostProcess::Blur);
+				blurCount++;
+			}
+	    }
+		ImGui::Checkbox("Motion Blur", &motionBlur);
+
+		gPostProcessingConstants.isMotionBlur = motionBlur;
 
 		ImGui::SliderFloat("stregth", &gPostProcessingConstants.blurStrength, 2, 8);
 	}
+	
+
+	//Water
 	ImGui::Checkbox("Underwater", &waterBox);
+	//ImGui::Text("Underwater");
+	//ImGui::Checkbox("Fullscreen  ", &waterBox);
+	//ImGui::Checkbox("Polygon  ", &polywaterBox);
+
+
+
 
 	ImGui::Checkbox("Gaussian Blur", &gaussianBox);
 	if (gaussianBox == true)
@@ -1215,7 +1284,7 @@ void RenderScene()
 		ImGui::SliderFloat("", &gPostProcessingConstants.numColours, 2, 35);
 	}
 
-	ImGui::Checkbox("Chromatic Aberration", &chromaticBox);
+	ImGui::Checkbox("Chromatic Aberration   ", &chromaticBox);
 
 	ImGui::Checkbox("Edge Detection", &edgeBox);
 
@@ -1254,6 +1323,51 @@ void RenderScene()
 
 
 
+
+
+	ImGui::Begin("Polygon Postprocess", 0, ImGuiWindowFlags_AlwaysAutoResize);
+	ImGui::Checkbox("Tint     ", &polytintBox);
+
+	ImGui::Checkbox("Box blur", &polyblurBox);
+
+	if (polyblurBox == true)
+	{
+		ImGui::SliderFloat("stregth ", &gPostProcessingConstants.blurStrength, 2, 8);
+	}
+
+	ImGui::Checkbox("Underwater", &polywaterBox);
+
+	ImGui::Checkbox("Gaussian Blur", &polygaussianBox);
+	ImGui::Checkbox("Pixelated", &polypixelBox);
+	if (polypixel == true)
+	{
+		ImGui::SliderFloat("size", &gPostProcessingConstants.pixelSize, 15, 2000);
+	}
+	ImGui::Checkbox("Negative", &polynegativeBox);
+	ImGui::Checkbox("Posterization", &polyposterizationBox);
+	if (polyposterization == true)
+	{
+		ImGui::SliderFloat("", &gPostProcessingConstants.numColours, 2, 35);
+	}
+	ImGui::Checkbox("Chromatic Aberration ", &polychromaticBox);
+	ImGui::Checkbox("Edge Detection", &polyedgeBox);
+	ImGui::Checkbox("Neon", &polyneonBox);
+	ImGui::Checkbox("Paint", &polypaintBox);
+	if (polypaint == true)
+	{
+		ImGui::SliderFloat("Radius", &gPostProcessingConstants.radius, 0, 10);
+	}
+	ImGui::Checkbox("Frost", &polyfrostBox);
+	if (polyfrost == true)
+	{
+		ImGui::SliderFloat("Frequency", &gPostProcessingConstants.freq, 0.025, 0.8);
+		ImGui::SliderFloat2("Pixel", pix, 0, 50);
+	}
+	
+	ImGui::Checkbox("Distort", &polydistortBox);
+
+	ImGui::End();
+
 	ImGui::Render();
 	gD3DContext->OMSetRenderTargets(1, &gBackBufferRenderTarget, nullptr);
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
@@ -1272,7 +1386,7 @@ void RenderScene()
 void UpdateScene(float frameTime)
 {
 	//***********
-	
+
 
 	// Select post process on keys
 	if (KeyHit(Key_F1))  fullscreen = true;
@@ -1288,8 +1402,9 @@ void UpdateScene(float frameTime)
 			gCurrentPostProcess.push_back(PostProcess::Tint);
 			tint = true;
 		}
+
 	}
-	else 
+	else
 	{
 		if (tint == true)
 		{
@@ -1302,9 +1417,34 @@ void UpdateScene(float frameTime)
 				}
 			}
 			tint = false;
+		}		
+	}
+
+	if (polytintBox == true)
+	{
+		if (polytint == false)
+		{
+			gCurrentPostProcessPoly.push_back(PostProcess::Tint);
+			polytint = true;
 		}
 	}
-		
+	else
+	{
+		if (polytint == true)
+		{
+			for (int i = 0; i < gCurrentPostProcessPoly.size(); i++)
+			{
+				if (gCurrentPostProcessPoly[i] == PostProcess::Tint)
+				{
+					gCurrentPostProcessPoly.erase(gCurrentPostProcessPoly.begin() + i);
+					break;
+				}
+			}
+			polytint = false;
+		}
+	}
+
+
 	//BLUR
 	if (blurBox == true)
 	{
@@ -1335,6 +1475,34 @@ void UpdateScene(float frameTime)
 		}
 	}
 
+	//BLUR
+	if (polyblurBox == true)
+	{
+		if (polyblur == false)
+		{
+			gCurrentPostProcessPoly.push_back(PostProcess::Blur);
+			polyblur = true;
+			//blurCount++;
+		}
+	}
+	else
+	{
+		if (polyblur == true)
+		{
+			for (int i = 0; i < gCurrentPostProcessPoly.size(); i++)
+			{
+				if (gCurrentPostProcessPoly[i] == PostProcess::Blur)
+				{
+					gCurrentPostProcessPoly.erase(gCurrentPostProcessPoly.begin() + i);
+					//blurCount--;
+					break;
+				}
+			}
+			
+			polyblur = false;
+		}
+	}
+
 	//WATER
 	if (waterBox == true)
 	{
@@ -1359,6 +1527,31 @@ void UpdateScene(float frameTime)
 			}
 		}
 	}
+	//WATER
+	if (polywaterBox == true)
+	{
+		if (polywater == false)
+		{
+			gCurrentPostProcessPoly.push_back(PostProcess::Water);
+			polywater = true;
+		}
+	}
+	else
+	{
+		if (polywater == true)
+		{
+			polywater = false;
+			for (int i = 0; i < gCurrentPostProcessPoly.size(); i++)
+			{
+				if (gCurrentPostProcessPoly[i] == PostProcess::Water)
+				{
+					gCurrentPostProcessPoly.erase(gCurrentPostProcessPoly.begin() + i);
+					break;
+				}
+			}
+		}
+	}
+
 
 	//PAINT
 	if (paintBox == true)
@@ -1379,6 +1572,29 @@ void UpdateScene(float frameTime)
 				if (gCurrentPostProcess[i] == PostProcess::Paint)
 				{
 					gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
+					break;
+				}
+			}
+		}
+	}
+	if (polypaintBox == true)
+	{
+		if (polypaint == false)
+		{
+			gCurrentPostProcessPoly.push_back(PostProcess::Paint);
+			polypaint = true;
+		}
+	}
+	else
+	{
+		if (polypaint == true)
+		{
+			polypaint = false;
+			for (int i = 0; i < gCurrentPostProcessPoly.size(); i++)
+			{
+				if (gCurrentPostProcessPoly[i] == PostProcess::Paint)
+				{
+					gCurrentPostProcessPoly.erase(gCurrentPostProcessPoly.begin() + i);
 					break;
 				}
 			}
@@ -1410,6 +1626,29 @@ void UpdateScene(float frameTime)
 			}
 		}
 	}
+	if (polyfrostBox == true)
+	{
+		if (polyfrost == false)
+		{
+			gCurrentPostProcessPoly.push_back(PostProcess::Frost);
+			polyfrost = true;
+		}
+	}
+	else
+	{
+		if (polyfrost == true)
+		{
+			polyfrost = false;
+			for (int i = 0; i < gCurrentPostProcessPoly.size(); i++)
+			{
+				if (gCurrentPostProcessPoly[i] == PostProcess::Frost)
+				{
+					gCurrentPostProcessPoly.erase(gCurrentPostProcessPoly.begin() + i);
+					break;
+				}
+			}
+		}
+	}
 
     //Posterization
 	if (posterizationBox == true)
@@ -1430,6 +1669,29 @@ void UpdateScene(float frameTime)
 				if (gCurrentPostProcess[i] == PostProcess::Posterization)
 				{
 					gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
+					break;
+				}
+			}
+		}
+	}
+	if (polyposterizationBox == true)
+	{
+		if (polyposterization == false)
+		{
+			gCurrentPostProcessPoly.push_back(PostProcess::Posterization);
+			polyposterization = true;
+		}
+	}
+	else
+	{
+		if (polyposterization == true)
+		{
+			polyposterization = false;
+			for (int i = 0; i < gCurrentPostProcessPoly.size(); i++)
+			{
+				if (gCurrentPostProcessPoly[i] == PostProcess::Posterization)
+				{
+					gCurrentPostProcessPoly.erase(gCurrentPostProcessPoly.begin() + i);
 					break;
 				}
 			}
@@ -1460,6 +1722,29 @@ void UpdateScene(float frameTime)
 			}
 		}
 	}
+	if (polychromaticBox == true)
+	{
+		if (polychromatic == false)
+		{
+			gCurrentPostProcessPoly.push_back(PostProcess::ChromaticAberration);
+			polychromatic = true;
+		}
+	}
+	else
+	{
+		if (polychromatic == true)
+		{
+			polychromatic = false;
+			for (int i = 0; i < gCurrentPostProcessPoly.size(); i++)
+			{
+				if (gCurrentPostProcessPoly[i] == PostProcess::ChromaticAberration)
+				{
+					gCurrentPostProcessPoly.erase(gCurrentPostProcessPoly.begin() + i);
+					break;
+				}
+			}
+		}
+	}
 
 	//EDGE
 	if (edgeBox == true)
@@ -1480,6 +1765,29 @@ void UpdateScene(float frameTime)
 				if (gCurrentPostProcess[i] == PostProcess::Edge)
 				{
 					gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
+					break;
+				}
+			}
+		}
+	}
+	if (polyedgeBox == true)
+	{
+		if (polyedge == false)
+		{
+			gCurrentPostProcessPoly.push_back(PostProcess::Edge);
+			polyedge = true;
+		}
+	}
+	else
+	{
+		if (polyedge == true)
+		{
+			polyedge = false;
+			for (int i = 0; i < gCurrentPostProcessPoly.size(); i++)
+			{
+				if (gCurrentPostProcessPoly[i] == PostProcess::Edge)
+				{
+					gCurrentPostProcessPoly.erase(gCurrentPostProcessPoly.begin() + i);
 					break;
 				}
 			}
@@ -1510,7 +1818,29 @@ void UpdateScene(float frameTime)
 			}
 		}
 	}
-
+	if (polyneonBox == true)
+	{
+		if (polyneon == false)
+		{
+			gCurrentPostProcessPoly.push_back(PostProcess::Neon);
+			polyneon = true;
+		}
+	}
+	else
+	{
+		if (polyneon == true)
+		{
+			polyneon = false;
+			for (int i = 0; i < gCurrentPostProcessPoly.size(); i++)
+			{
+				if (gCurrentPostProcessPoly[i] == PostProcess::Neon)
+				{
+					gCurrentPostProcessPoly.erase(gCurrentPostProcessPoly.begin() + i);
+					break;
+				}
+			}
+		}
+	}
 
 	//PIXELATED
 	if (pixelBox == true)
@@ -1536,6 +1866,29 @@ void UpdateScene(float frameTime)
 			}
 		}
 	}
+	if (polypixelBox == true)
+	{
+		if (polypixel == false)
+		{
+			gCurrentPostProcessPoly.push_back(PostProcess::Pixelated);
+			polypixel = true;
+		}
+	}
+	else
+	{
+		if (polypixel == true)
+		{
+			polypixel = false;
+			for (int i = 0; i < gCurrentPostProcessPoly.size(); i++)
+			{
+				if (gCurrentPostProcessPoly[i] == PostProcess::Pixelated)
+				{
+					gCurrentPostProcessPoly.erase(gCurrentPostProcessPoly.begin() + i);
+					break;
+				}
+			}
+		}
+	}
 
 	//NEGATIVE
 	if (negativeBox == true)
@@ -1556,6 +1909,29 @@ void UpdateScene(float frameTime)
 				if (gCurrentPostProcess[i] == PostProcess::Negative)
 				{
 					gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
+					break;
+				}
+			}
+		}
+	}
+	if (polynegativeBox == true)
+	{
+		if (polynegative == false)
+		{
+			gCurrentPostProcessPoly.push_back(PostProcess::Negative);
+			polynegative = true;
+		}
+	}
+	else
+	{
+		if (polynegative == true)
+		{
+			polynegative = false;
+			for (int i = 0; i < gCurrentPostProcessPoly.size(); i++)
+			{
+				if (gCurrentPostProcessPoly[i] == PostProcess::Negative)
+				{
+					gCurrentPostProcessPoly.erase(gCurrentPostProcessPoly.begin() + i);
 					break;
 				}
 			}
@@ -1599,6 +1975,43 @@ void UpdateScene(float frameTime)
 				}
 				gaussianCount--;
 			}
+		}
+	}
+	if (polygaussianBox == true)
+	{
+		if (polygaussian == false)
+		{
+			gCurrentPostProcessPoly.push_back(PostProcess::GaussianVertical);
+			gCurrentPostProcessPoly.push_back(PostProcess::GaussianHorizontal);
+			polygaussian = true;
+			//gaussianCount++;
+		}
+	}
+	else
+	{
+		if (polygaussian == true)
+		{
+			polygaussian = false;
+			
+				for (int i = 0; i < gCurrentPostProcessPoly.size(); i++)
+				{
+					if (gCurrentPostProcessPoly[i] == PostProcess::GaussianVertical)
+					{
+						gCurrentPostProcessPoly.erase(gCurrentPostProcessPoly.begin() + i);
+						break;
+					}
+
+				}
+				for (int i = 0; i < gCurrentPostProcessPoly.size(); i++)
+				{
+					if (gCurrentPostProcessPoly[i] == PostProcess::GaussianHorizontal)
+					{
+						gCurrentPostProcessPoly.erase(gCurrentPostProcessPoly.begin() + i);
+						break;
+					}
+				}
+				
+			
 		}
 	}
 
@@ -1690,6 +2103,7 @@ void UpdateScene(float frameTime)
 		}
 	}
 
+
 	//BURN
 	if (burnBox == true)
 	{
@@ -1714,6 +2128,7 @@ void UpdateScene(float frameTime)
 			}
 		}
 	}
+
 	//DISTORT
 	if (distortBox == true)
 	{
@@ -1733,6 +2148,29 @@ void UpdateScene(float frameTime)
 				if (gCurrentPostProcess[i] == PostProcess::Distort)
 				{
 					gCurrentPostProcess.erase(gCurrentPostProcess.begin() + i);
+					break;
+				}
+			}
+		}
+	}
+	if (polydistortBox == true)
+	{
+		if (polydistort == false)
+		{
+			gCurrentPostProcessPoly.push_back(PostProcess::Distort);
+			polydistort = true;
+		}
+	}
+	else
+	{
+		if (polydistort == true)
+		{
+			polydistort = false;
+			for (int i = 0; i < gCurrentPostProcessPoly.size(); i++)
+			{
+				if (gCurrentPostProcessPoly[i] == PostProcess::Distort)
+				{
+					gCurrentPostProcessPoly.erase(gCurrentPostProcessPoly.begin() + i);
 					break;
 				}
 			}
@@ -1763,6 +2201,7 @@ void UpdateScene(float frameTime)
 			}
 		}
 	}
+
 	//if (KeyHit(Key_6))   gCurrentPostProcess = PostProcess::HeatHaze;
 	//if (KeyHit(Key_9))   gCurrentPostProcess = PostProcess::Copy;
 	//if (KeyHit(Key_0))   gCurrentPostProcess = PostProcess::None;
