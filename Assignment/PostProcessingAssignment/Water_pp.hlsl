@@ -23,17 +23,10 @@ SamplerState PointSample : register(s0); // We don't usually want to filter (bil
 // Post-processing shader that tints the scene texture to a given colour
 float4 main(PostProcessingInput input) : SV_Target
 {
-
+    //wobble
     input.sceneUV.x += sin(input.sceneUV.y * 3.14159 * 14 + gSWaterWiggle) / 300;
     
-	
-	// Calculate alpha to display the effect in a softened circle, could use a texture rather than calculations for the same task.
-	// Uses the second set of area texture coordinates, which range from (0,0) to (1,1) over the area being processed
-    float softEdge = 0.20f; // Softness of the edge of the circle - range 0.001 (hard edge) to 0.25 (very soft)
-    float2 centreVector = input.areaUV - float2(0.5f, 0.5f);
-    float centreLengthSq = dot(centreVector, centreVector);
-    float alpha = 1.0f - saturate((centreLengthSq - 0.25f + softEdge) / softEdge); // Soft circle calculation based on fact that this circle has a radius of 0.5 (as area UVs go from 0->1)
-    
+   
     float3 colour = float3(0.0f, 0.0f, 0.0f);
     
     float offsetX = 1 / gViewportWidth * 3;

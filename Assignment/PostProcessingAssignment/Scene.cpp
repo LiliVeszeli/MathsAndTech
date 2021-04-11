@@ -27,6 +27,7 @@
 #include <array>
 #include <sstream>
 #include <memory>
+#include <deque>
 
 
 //--------------------------------------------------------------------------------------
@@ -979,7 +980,7 @@ void PolygonPostProcess(PostProcess postProcess, const std::array<CVector3, 4>& 
 	SelectPostProcessShaderAndTextures(postProcess);
 
 
-	gD3DContext->OMSetBlendState(gNoBlendingState, nullptr, 0xffffff);
+	gD3DContext->OMSetBlendState(gAlphaBlendingState, nullptr, 0xffffff);
 	// Loop through the given points, transform each to 2D (this is what the vertex shader normally does in most labs)
 	for (unsigned int i = 0; i < points.size(); ++i)
 	{
@@ -1068,26 +1069,25 @@ void RenderScene()
 
 	
 
-	/*gD3DContext->OMSetRenderTargets(1, &gBloomRenderTarget, gDepthStencil);
-	gD3DContext->ClearRenderTargetView(gBloomRenderTarget, &gBackgroundColor.r);
 
-	RenderSceneFromCamera(gCamera);*/
 
 	////--------------- Scene completion ---------------////
 
 	
 
 	// Run any post-processing steps
-	if (!gCurrentPostProcess.empty() || polygon || area)
+	if (fullscreen || polygon || area)
 	{
-		if (area == true) //gCurrentPostProcessMode == PostProcessMode::Area)
+        if (motionBlur == true)
 		{
-			//for (int i = 0; i < gCurrentPostProcess.size(); i++)
-			//{
-			//	// Pass a 3D point for the centre of the affected area and the size of the (rectangular) area in world units
-			//	//AreaPostProcess(gCurrentPostProcess[i], gCube->Position(), { 22, 22 }, 15);
-			//	
-			//}
+
+			FullScreenPostProcess(PostProcess::Blur, gPostProcessRenderTargets[(gCurrentPostProcessIndex + 1) % 2]);
+
+		}
+
+		if (area == true) 
+		{
+
 			CVector3 pos = gCube->Position();
 			//pos.y += 2;
 			gPostProcessingConstants.isArea = true;
@@ -1123,12 +1123,12 @@ void RenderScene()
 			static CMatrix4x4 polyMatrixHeart = MatrixTranslation(CVector3{ 62, 10, -10 });
 
 
-			PolygonPostProcess(PostProcess::Copy, points2, polyMatrix2);
+			
 
 			PolygonPostProcess(PostProcess::Distort, pointsSpade, polyMatrixSpade);
 			PolygonPostProcess(PostProcess::Tint, pointsDiamond, polyMatrixDiamond);
 			PolygonPostProcess(PostProcess::Pixelated, pointsClub, polyMatrixClub);
-			PolygonPostProcess(PostProcess::Water, pointsHeart, polyMatrixHeart);
+			PolygonPostProcess(PostProcess::Negative, pointsHeart, polyMatrixHeart);
 
 			for (int i = 0; i < gCurrentPostProcessPoly.size(); i++)
 			{
@@ -1144,14 +1144,24 @@ void RenderScene()
 			
 			for (int i = 0; i < gCurrentPostProcess.size(); i++)
 			{	
-				if (gCurrentPostProcess[i] == PostProcess::BloomSampler)
+				if (motionBlur == true && gCurrentPostProcess[i] == PostProcess::Blur)
 				{
-					FullScreenPostProcess(PostProcess::Copy, gBloomRenderTarget);
-					gCurrentPostProcessIndex--;
+					//FullScreenPostProcess(gCurrentPostProcess[i], gPostProcessRenderTargets[(gCurrentPostProcessIndex + 1) % 2]);
 				}
-			    FullScreenPostProcess(gCurrentPostProcess[i], gPostProcessRenderTargets[(gCurrentPostProcessIndex + 1) % 2]);			
+				else
+				{ 
+					if (gCurrentPostProcess[i] == PostProcess::BloomSampler)
+					{
+						FullScreenPostProcess(PostProcess::Copy, gBloomRenderTarget);
+						gCurrentPostProcessIndex--;
+					}
+					FullScreenPostProcess(gCurrentPostProcess[i], gPostProcessRenderTargets[(gCurrentPostProcessIndex + 1) % 2]);
+				}
+
 			}
 		}
+
+	
 
 		FullScreenPostProcess(PostProcess::Copy, gBackBufferRenderTarget);
 		// These lines unbind the scene texture from the pixel shader to stop DirectX issuing a warning when we try to render to it again next frame
@@ -1161,7 +1171,7 @@ void RenderScene()
 
 	//IMGUI controls
 	ImGui::Begin("Postprocess Switch", 0, ImGuiWindowFlags_AlwaysAutoResize);
-	ImGui::Checkbox("Fullscreen        ", &fullscreen);
+	ImGui::Checkbox("Fullscreen          ", &fullscreen);
 	ImGui::Checkbox("Area", &area);
 	ImGui::Checkbox("Polygon", &polygon);
 	ImGui::End();
@@ -1169,17 +1179,14 @@ void RenderScene()
 	//ImGui::NewLine();
 	ImGui::Begin("Fullscreen Postprocess", 0, ImGuiWindowFlags_AlwaysAutoResize);
 	//Tint
-	//ImGui::Text("Tint");
-	//ImGui::Checkbox("Fullscreen", &tintBox);	
-	//ImGui::Checkbox("Polygon", &polytintBox);
+
 	ImGui::Checkbox("Tint", &tintBox);
 	
 
 
 	//Blur
 	ImGui::Checkbox("Box Blur", &blurBox);
-	//ImGui::Text("Box Blur");
-	//ImGui::Checkbox("Fullscreen ", &blurBox);
+
 	
 	if (blurBox == true)
 	{
@@ -1216,15 +1223,20 @@ void RenderScene()
 
 		gPostProcessingConstants.isMotionBlur = motionBlur;
 
+	
+
 		ImGui::SliderFloat("stregth", &gPostProcessingConstants.blurStrength, 2, 8);
 	}
 	
+	if (blurBox == false)
+	{
+		motionBlur = false;
+		gPostProcessingConstants.isMotionBlur = motionBlur;
+	}
 
 	//Water
 	ImGui::Checkbox("Underwater", &waterBox);
-	//ImGui::Text("Underwater");
-	//ImGui::Checkbox("Fullscreen  ", &waterBox);
-	//ImGui::Checkbox("Polygon  ", &polywaterBox);
+	
 
 
 
@@ -1284,7 +1296,7 @@ void RenderScene()
 		ImGui::SliderFloat("", &gPostProcessingConstants.numColours, 2, 35);
 	}
 
-	ImGui::Checkbox("Chromatic Aberration   ", &chromaticBox);
+	ImGui::Checkbox("Chromatic Aberration ", &chromaticBox);
 
 	ImGui::Checkbox("Edge Detection", &edgeBox);
 
@@ -1302,7 +1314,7 @@ void RenderScene()
 	if (frost == true)
 	{
 		ImGui::SliderFloat("Frequency", &gPostProcessingConstants.freq, 0.025, 0.8);
-		ImGui::SliderFloat2("Pixel", pix, 0, 50);
+		//ImGui::SliderFloat2("Pixel", pix, 0, 50);
 	}
 
 
@@ -1361,7 +1373,7 @@ void RenderScene()
 	if (polyfrost == true)
 	{
 		ImGui::SliderFloat("Frequency", &gPostProcessingConstants.freq, 0.025, 0.8);
-		ImGui::SliderFloat2("Pixel", pix, 0, 50);
+		//ImGui::SliderFloat2("Pixel", pix, 0, 50);
 	}
 	
 	ImGui::Checkbox("Distort", &polydistortBox);
