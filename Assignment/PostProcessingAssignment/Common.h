@@ -164,7 +164,7 @@ struct PostProcessingConstants
 
 	int isArea;
 	int isMotionBlur;
-	int paddingK;
+	int bigger;
 	int paddingL;
 };
 extern PostProcessingConstants gPostProcessingConstants;      // This variable holds the CPU-side constant buffer described above

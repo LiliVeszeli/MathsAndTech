@@ -210,6 +210,7 @@ bool fullscreen = true;
 bool polygon = true;
 
 bool motionBlur = false;
+bool biggerKernel = false;
 float pix[2];
 
 
@@ -536,6 +537,7 @@ bool InitScene()
 
 	gPostProcessingConstants.isArea = false;
 	gPostProcessingConstants.isMotionBlur = false;
+	gPostProcessingConstants.bigger = false;
 
 	return true;
 }
@@ -1146,7 +1148,7 @@ void RenderScene()
 			{	
 				if (motionBlur == true && gCurrentPostProcess[i] == PostProcess::Blur)
 				{
-					//FullScreenPostProcess(gCurrentPostProcess[i], gPostProcessRenderTargets[(gCurrentPostProcessIndex + 1) % 2]);
+					
 				}
 				else
 				{ 
@@ -1244,6 +1246,9 @@ void RenderScene()
 	ImGui::Checkbox("Gaussian Blur", &gaussianBox);
 	if (gaussianBox == true)
 	{
+		if (biggerKernel == false)
+		{
+		
 		ImGui::SameLine();
 		if (ImGui::Button("-", ImVec2(20, 20)) == true)
 		{
@@ -1279,7 +1284,15 @@ void RenderScene()
 			gCurrentPostProcess.push_back(PostProcess::GaussianHorizontal);
 			gaussianCount++;
 		}
+	    }
+		ImGui::Checkbox("Bigger kernel", &biggerKernel);
+		gPostProcessingConstants.bigger = biggerKernel;
 		ImGui::SliderFloat("stregth", &gPostProcessingConstants.gaussianStrength, 1.1, 4);
+	}
+
+	if (gaussianBox == false)
+	{
+		biggerKernel = false;
 	}
 
 	ImGui::Checkbox("Pixelated", &pixelBox);
@@ -1293,7 +1306,7 @@ void RenderScene()
 	ImGui::Checkbox("Posterization", &posterizationBox);
 	if (posterization == true)
 	{
-		ImGui::SliderFloat("", &gPostProcessingConstants.numColours, 2, 35);
+		ImGui::SliderFloat("Step size", &gPostProcessingConstants.numColours, 2, 35);
 	}
 
 	ImGui::Checkbox("Chromatic Aberration ", &chromaticBox);

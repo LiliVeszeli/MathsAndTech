@@ -174,7 +174,7 @@ cbuffer PostProcessingConstants : register(b1)
     
     bool gisArea;
     bool gisMotionBlur;
-    bool paddingK;
+    bool gBigger;
     bool paddingL;
     //float3 paddingM;
 }

@@ -23,31 +23,15 @@ SamplerState PointSample : register(s0); // We don't usually want to filter (bil
 // Post-processing shader that tints the scene texture to a given colour
 float4 main(PostProcessingInput input) : SV_Target
 {
-
-    //float3 colour = float3(0.0f, 0.0f, 0.0f);
-    ////SceneTexture.Sample(PointSample, input.sceneUV).rgb;
 	
     float offsetX = 1 / gViewportWidth;
     
-    //float aberrationAmount = 0.1 + abs(gViewportHeight / 8.0);
 
-    ////float2 uv = input.sceneUV.xy / gViewportHeight;
-    //float2 distFromCenter = input.sceneUV - 0.5*offsetX;
-
-    //// stronger aberration near the edges by raising to power 3
-    //float2 aberrated = aberrationAmount * pow(distFromCenter, float2(3.0, 3.0));
-    
-    
-    
-    //colour.r = SceneTexture.Sample(PointSample, input.sceneUV - aberrated).r;
-    //colour.g = SceneTexture.Sample(PointSample, input.sceneUV).g;
-    //colour.b = SceneTexture.Sample(PointSample, input.sceneUV + aberrated).b;
-    
     float4 red = SceneTexture.Sample(PointSample, float2(input.sceneUV.x - offsetX*5, input.sceneUV.y - offsetX*5)).r;
     float4 green = SceneTexture.Sample(PointSample, input.sceneUV).g;
     float4 blue = SceneTexture.Sample(PointSample, float2(input.sceneUV.x + offsetX*5, input.sceneUV.y + offsetX*5)).b;
 
-    // Combine the offset colors.
+    // Combine the offset colours
     float3 colour = float3(red.r, green.g, blue.b);
     
     

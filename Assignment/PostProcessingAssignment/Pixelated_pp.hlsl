@@ -32,9 +32,9 @@ float4 main(PostProcessingInput input) : SV_Target
     
     float3 colour = float3(0.0f, 0.0f, 0.0f);
      
-    float Pixels = gPixelSize;
-    float dx = 6.0 * (1.0 / Pixels);
-    float dy = 10.0 * (1.0 / Pixels);
+    float pixels = gPixelSize;
+    float dx = 6.0 * (1.0 / pixels);
+    float dy = 10.0 * (1.0 / pixels);
     float2 newUV = float2(dx * floor(input.sceneUV.x / dx), dy * floor(input.sceneUV.y / dy));
     colour = SceneTexture.Sample(PointSample, newUV);
    

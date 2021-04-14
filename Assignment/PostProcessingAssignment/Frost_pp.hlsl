@@ -77,8 +77,7 @@ float4 spline(float x, float4 c1, float4 c2, float4 c3, float4 c4, float4 c5, fl
     }
     else
     {
-    //tmp = saturate(tmp - 7.0);
-    // http://www.ozone3d.net/blogs/lab/20080709/saturate-function-in-glsl/
+
         tmp = clamp(tmp - 7.0, 0.0, 1.0);
         w8 = 1.0 - tmp;
         w9 = tmp;
@@ -94,54 +93,39 @@ float3 NOISE2D(float2 uv)
 
 
 
-// Post-processing shader that tints the scene texture to a given colour
+
 float4 main(PostProcessingInput input) : SV_Target
 {
-
-	// Calculate alpha to display the effect in a softened circle, could use a texture rather than calculations for the same task.
-	// Uses the second set of area texture coordinates, which range from (0,0) to (1,1) over the area being processed
-    float softEdge = 0.20f; // Softness of the edge of the circle - range 0.001 (hard edge) to 0.25 (very soft)
-    float2 centreVector = input.areaUV - float2(0.5f, 0.5f);
-    float centreLengthSq = dot(centreVector, centreVector);
-    float alpha = 1.0f - saturate((centreLengthSq - 0.25f + softEdge) / softEdge); // Soft circle calculation based on fact that this circle has a radius of 0.5 (as area UVs go from 0->1)
-    
-    //float vx_offset = 0.001;
     float PixelX = gpixX;
     float PixelY = gpixY;
     float Freq = gfreq;
     
-    
     float2 uv = input.sceneUV;
     float3 tc = float3(1.0, 0.0, 0.0);
     
-    //if (uv.x < (vx_offset - 0.005))
-    //{
-        float DeltaX = PixelX / gViewportWidth;
-        float DeltaY = PixelY / gViewportHeight;
-        float2 ox = float2(DeltaX, 0.0);
-        float2 oy = float2(0.0, DeltaY);
-        float2 PP = uv - oy;
-        float4 C00 = SceneTexture.Sample(PointSample, PP - ox);
-        float4 C01 = SceneTexture.Sample(PointSample, PP);
-        float4 C02 = SceneTexture.Sample(PointSample, PP + ox);
-        PP = uv;
-        float4 C10 = SceneTexture.Sample(PointSample, PP - ox);
-        float4 C11 = SceneTexture.Sample(PointSample, PP);
-        float4 C12 = SceneTexture.Sample(PointSample, PP + ox);
-        PP = uv + oy;
-        float4 C20 = SceneTexture.Sample(PointSample, PP - ox);
-        float4 C21 = SceneTexture.Sample(PointSample, PP);
-        float4 C22 = SceneTexture.Sample(PointSample, PP + ox);
+ 
+    float DeltaX = PixelX / gViewportWidth;
+    float DeltaY = PixelY / gViewportHeight;
+    float2 ox = float2(DeltaX, 0.0);
+    float2 oy = float2(0.0, DeltaY);
+    float2 PP = uv - oy;
+    float4 C00 = SceneTexture.Sample(PointSample, PP - ox);
+    float4 C01 = SceneTexture.Sample(PointSample, PP);
+    float4 C02 = SceneTexture.Sample(PointSample, PP + ox);
+    PP = uv;
+    float4 C10 = SceneTexture.Sample(PointSample, PP - ox);
+    float4 C11 = SceneTexture.Sample(PointSample, PP);
+    float4 C12 = SceneTexture.Sample(PointSample, PP + ox);
+    PP = uv + oy;
+    float4 C20 = SceneTexture.Sample(PointSample, PP - ox);
+    float4 C21 = SceneTexture.Sample(PointSample, PP);
+    float4 C22 = SceneTexture.Sample(PointSample, PP + ox);
     
-        float n = NOISE2D(Freq * uv).x;
-        n = mod(n, 0.111111) / 0.111111;
-        float4 result = spline(n, C00, C01, C02, C10, C11, C12, C20, C21, C22);
-        tc = result.rgb *1.1;
-   // }
-    //else if (uv.x >= (vx_offset + 0.005))
-    //{
-    //    tc = SceneTexture.Sample(PointSample, uv).rgb;
-    //}
+    float n = NOISE2D(Freq * uv).x;
+    n = mod(n, 0.111111) / 0.111111;
+    float4 result = spline(n, C00, C01, C02, C10, C11, C12, C20, C21, C22);
+    tc = result.rgb *1.1;
+  
   
     return float4(tc, 1.0f);
 

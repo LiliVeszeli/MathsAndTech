@@ -23,7 +23,7 @@ SamplerState PointSample : register(s0); // We don't usually want to filter (bil
 // Post-processing shader that tints the scene texture to a given colour
 float4 main(PostProcessingInput input) : SV_Target
 {
-
+    //not implemented
 
     float3 colour = SceneTexture.Sample(PointSample, input.sceneUV).rgb;
     
