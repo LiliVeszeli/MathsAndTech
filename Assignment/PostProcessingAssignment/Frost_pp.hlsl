@@ -93,7 +93,6 @@ float3 NOISE2D(float2 uv)
 
 
 
-
 float4 main(PostProcessingInput input) : SV_Target
 {
     float PixelX = gpixX;
